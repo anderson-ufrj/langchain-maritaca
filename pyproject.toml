@@ -74,7 +74,6 @@ packages = ["langchain_maritaca"]
 
 [tool.mypy]
 disallow_untyped_defs = true
-warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
 
