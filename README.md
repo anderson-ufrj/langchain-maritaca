@@ -140,6 +140,15 @@ Maritaca AI models are specifically trained for Brazilian Portuguese, offering:
 - **Cost-Effective**: Competitive pricing for Portuguese language tasks
 - **Low Latency**: Servers located in Brazil for faster response times
 
+## Used in Production
+
+**[Cidadão.AI](https://cidadao-ai-frontend.vercel.app/pt)** - Brazilian government transparency platform powered by AI agents, handling 331K+ requests/month.
+
+- Frontend: [github.com/anderson-ufrj/cidadao.ai-frontend](https://github.com/anderson-ufrj/cidadao.ai-frontend)
+- Backend: [github.com/anderson-ufrj/cidadao.ai-backend](https://github.com/anderson-ufrj/cidadao.ai-backend)
+
+> *Using this package in production? [Open an issue](https://github.com/anderson-ufrj/langchain-maritaca/issues) to get featured!*
+
 ## API Reference
 
 ### ChatMaritaca
