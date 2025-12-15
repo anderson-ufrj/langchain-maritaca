@@ -1,10 +1,10 @@
 # langchain-maritaca
 
-[![PyPI version](https://badge.fury.io/py/langchain-maritaca.svg)](https://badge.fury.io/py/langchain-maritaca)
+[![PyPI version](https://img.shields.io/pypi/v/langchain-maritaca.svg)](https://pypi.org/project/langchain-maritaca/)
 [![Python](https://img.shields.io/pypi/pyversions/langchain-maritaca.svg)](https://pypi.org/project/langchain-maritaca/)
+[![Downloads](https://img.shields.io/pypi/dm/langchain-maritaca.svg)](https://pypi.org/project/langchain-maritaca/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/anderson-ufrj/langchain-maritaca/actions/workflows/ci.yml/badge.svg)](https://github.com/anderson-ufrj/langchain-maritaca/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/anderson-ufrj/langchain-maritaca/branch/main/graph/badge.svg)](https://codecov.io/gh/anderson-ufrj/langchain-maritaca)
 
 An integration package connecting [Maritaca AI](https://www.maritaca.ai/) and [LangChain](https://langchain.com/) for Brazilian Portuguese language models.
 
