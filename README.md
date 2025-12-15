@@ -20,8 +20,8 @@ Maritaca AI provides state-of-the-art Brazilian Portuguese language models, incl
 
 | Model | Description | Pricing (per 1M tokens) |
 |-------|-------------|------------------------|
-| `sabia-3` | Most capable model, best for complex tasks | R$ 5.00 input / R$ 10.00 output |
-| `sabiazinho-3` | Fast and economical, great for simple tasks | R$ 1.00 input / R$ 3.00 output |
+| `sabia-3.1.1` | Most capable model, best for complex tasks | Check [Maritaca AI](https://www.maritaca.ai/) for pricing |
+| `sabiazinho-3.1` | Fast and economical, great for simple tasks | Check [Maritaca AI](https://www.maritaca.ai/) for pricing |
 
 ## Installation
 
@@ -53,7 +53,7 @@ model = ChatMaritaca(api_key="your-api-key")
 from langchain_maritaca import ChatMaritaca
 
 model = ChatMaritaca(
-    model="sabia-3",
+    model="sabia-3.1",
     temperature=0.7,
 )
 
@@ -71,7 +71,7 @@ print(response.content)
 ```python
 from langchain_maritaca import ChatMaritaca
 
-model = ChatMaritaca(model="sabia-3", streaming=True)
+model = ChatMaritaca(model="sabia-3.1", streaming=True)
 
 for chunk in model.stream("Conte uma história sobre o folclore brasileiro"):
     print(chunk.content, end="", flush=True)
@@ -84,7 +84,7 @@ import asyncio
 from langchain_maritaca import ChatMaritaca
 
 async def main():
-    model = ChatMaritaca(model="sabia-3")
+    model = ChatMaritaca(model="sabia-3.1")
     response = await model.ainvoke("Qual é a receita de pão de queijo?")
     print(response.content)
 
@@ -97,7 +97,7 @@ asyncio.run(main())
 from langchain_maritaca import ChatMaritaca
 from langchain_core.prompts import ChatPromptTemplate
 
-model = ChatMaritaca(model="sabia-3")
+model = ChatMaritaca(model="sabia-3.1")
 
 prompt = ChatPromptTemplate.from_messages([
     ("system", "Você é um especialista em {topic}."),
@@ -124,7 +124,7 @@ def get_weather(city: str) -> str:
     """Get the current weather for a city."""
     return f"O clima em {city} está ensolarado, 25°C"
 
-model = ChatMaritaca(model="sabia-3")
+model = ChatMaritaca(model="sabia-3.1")
 model_with_tools = model.bind_tools([get_weather])
 
 response = model_with_tools.invoke("Como está o tempo em São Paulo?")
@@ -150,7 +150,7 @@ Main class for interacting with Maritaca AI models.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `model` | str | `"sabia-3"` | Model name to use |
+| `model` | str | `"sabia-3.1"` | Model name to use |
 | `temperature` | float | `0.7` | Sampling temperature (0.0-2.0) |
 | `max_tokens` | int | None | Maximum tokens to generate |
 | `top_p` | float | `0.9` | Top-p sampling parameter |

@@ -69,8 +69,8 @@ class ChatMaritaca(BaseChatModel):
     Key init args - completion params:
         model:
             Name of Maritaca model to use. Available models:
-            - `sabia-3` (default): Most capable model
-            - `sabiazinho-3`: Faster and more economical
+            - `sabia-3.1` (default): Most capable model
+            - `sabiazinho-3.1`: Faster and more economical
         temperature:
             Sampling temperature. Ranges from 0.0 to 2.0.
         max_tokens:
@@ -90,7 +90,7 @@ class ChatMaritaca(BaseChatModel):
         from langchain_maritaca import ChatMaritaca
 
         model = ChatMaritaca(
-            model="sabia-3",
+            model="sabia-3.1",
             temperature=0.7,
             max_retries=2,
         )
@@ -107,7 +107,7 @@ class ChatMaritaca(BaseChatModel):
         ```python
         AIMessage(
             content="A capital do Brasil é Brasília.",
-            response_metadata={"model": "sabia-3", "finish_reason": "stop"},
+            response_metadata={"model": "sabia-3.1", "finish_reason": "stop"},
         )
         ```
 
@@ -129,12 +129,12 @@ class ChatMaritaca(BaseChatModel):
     async_client: Any = Field(default=None, exclude=True)
     """Async HTTP client."""
 
-    model_name: str = Field(default="sabia-3", alias="model")
+    model_name: str = Field(default="sabia-3.1", alias="model")
     """Model name to use.
 
     Available models:
-    - sabia-3: Most capable model (R$ 5.00/R$ 10.00 per 1M tokens)
-    - sabiazinho-3: Fast and economical (R$ 1.00/R$ 3.00 per 1M tokens)
+    - sabia-3.1: Most capable model, best for complex tasks
+    - sabiazinho-3.1: Fast and economical, great for simple tasks
     """
 
     temperature: float = 0.7

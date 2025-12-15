@@ -18,7 +18,7 @@ from langchain_maritaca import ChatMaritaca
 @pytest.fixture
 def chat_model() -> ChatMaritaca:
     """Create a ChatMaritaca instance for testing."""
-    return ChatMaritaca(model="sabia-3", temperature=0.0)  # type: ignore[arg-type]
+    return ChatMaritaca(model="sabia-3.1", temperature=0.0)  # type: ignore[arg-type]
 
 
 @pytest.mark.skipif(
@@ -110,13 +110,13 @@ class TestChatMaritacaModels:
     """Test different Maritaca models."""
 
     def test_sabia_3(self) -> None:
-        """Test sabia-3 model."""
-        model = ChatMaritaca(model="sabia-3", temperature=0.0)  # type: ignore[arg-type]
+        """Test sabia-3.1 model."""
+        model = ChatMaritaca(model="sabia-3.1", temperature=0.0)  # type: ignore[arg-type]
         response = model.invoke([HumanMessage(content="Olá!")])
         assert isinstance(response, AIMessage)
 
     def test_sabiazinho_3(self) -> None:
-        """Test sabiazinho-3 model."""
-        model = ChatMaritaca(model="sabiazinho-3", temperature=0.0)  # type: ignore[arg-type]
+        """Test sabiazinho-3.1 model."""
+        model = ChatMaritaca(model="sabiazinho-3.1", temperature=0.0)  # type: ignore[arg-type]
         response = model.invoke([HumanMessage(content="Olá!")])
         assert isinstance(response, AIMessage)

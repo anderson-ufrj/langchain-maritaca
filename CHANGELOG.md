@@ -7,13 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - 2024-12-15
+## [0.1.1] - 2025-12-15
+
+### Changed
+
+- Update default model from `sabia-3` to `sabia-3.1`
+- Update model references to use `sabia-3.1` and `sabiazinho-3.1`
+- Sabiá 3.0 models have been discontinued by Maritaca AI
+
+## [0.1.0] - 2025-12-15
 
 ### Added
 
 - Initial release of `langchain-maritaca`
 - `ChatMaritaca` class for interacting with Maritaca AI models
-- Support for `sabia-3` and `sabiazinho-3` models
+- Support for `sabia-3.1` and `sabiazinho-3.1` models
 - Synchronous and asynchronous generation
 - Streaming support (sync and async)
 - Automatic retry logic with exponential backoff
@@ -32,5 +40,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Rate Limiting**: Graceful handling of API rate limits
 - **Tracing**: Built-in LangSmith integration for observability
 
-[Unreleased]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/anderson-ufrj/langchain-maritaca/releases/tag/v0.1.0
