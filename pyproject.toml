@@ -95,19 +95,14 @@ select = [
     "B",      # flake8-bugbear
     "C4",     # flake8-comprehensions
     "UP",     # pyupgrade
-    "ARG",    # flake8-unused-arguments
     "SIM",    # flake8-simplify
-    "TCH",    # flake8-type-checking
-    "PTH",    # flake8-use-pathlib
-    "ERA",    # eradicate
     "RUF",    # ruff-specific rules
 ]
 ignore = [
     "E501",   # line too long (handled by formatter)
     "B008",   # do not perform function calls in argument defaults
     "C901",   # too complex
-    "ARG001", # unused function argument
-    "ARG002", # unused method argument
+    "RUF100", # unused noqa directive
 ]
 
 [tool.ruff.lint.isort]
