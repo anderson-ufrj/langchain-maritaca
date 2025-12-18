@@ -119,3 +119,4 @@ Pipfile.lock
 
 # Benchmarks
 .benchmarks/
+uv.lock

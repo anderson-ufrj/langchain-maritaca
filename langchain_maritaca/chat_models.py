@@ -13,7 +13,7 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from collections.abc import AsyncIterator, Iterator, Mapping
+from collections.abc import AsyncIterator, Callable, Iterator, Mapping, Sequence
 from typing import Any
 
 import httpx
@@ -37,7 +37,10 @@ from langchain_core.messages import (
 )
 from langchain_core.messages.ai import UsageMetadata
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
+from langchain_core.runnables import Runnable
+from langchain_core.tools import BaseTool
 from langchain_core.utils import from_env, secret_from_env
+from langchain_core.utils.function_calling import convert_to_openai_tool
 from pydantic import ConfigDict, Field, SecretStr, model_validator
 from typing_extensions import Self
 
@@ -181,6 +184,12 @@ class ChatMaritaca(BaseChatModel):
     n: int = 1
     """Number of completions to generate."""
 
+    tools: list[dict[str, Any]] | None = Field(default=None, exclude=True)
+    """List of tools (functions) available for the model to call."""
+
+    tool_choice: str | dict[str, Any] | None = Field(default=None, exclude=True)
+    """Control which tool is called. Options: 'auto', 'required', or specific tool."""
+
     model_config = ConfigDict(
         populate_by_name=True,
     )
@@ -272,7 +281,55 @@ class ChatMaritaca(BaseChatModel):
             params["max_tokens"] = self.max_tokens
         if self.stop is not None:
             params["stop"] = self.stop
+        if self.tools is not None:
+            params["tools"] = self.tools
+        if self.tool_choice is not None:
+            params["tool_choice"] = self.tool_choice
         return params
+
+    def bind_tools(
+        self,
+        tools: Sequence[dict[str, Any] | type | Callable[..., Any] | BaseTool],
+        *,
+        tool_choice: str | dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Runnable[Any, BaseMessage]:
+        """Bind tools to this chat model.
+
+        Args:
+            tools: A list of tools to bind. Can be:
+                - Dict with OpenAI tool schema
+                - Pydantic BaseModel class
+                - Python function with type hints
+                - LangChain BaseTool instance
+            tool_choice: Control which tool is called:
+                - "auto": Model decides (default)
+                - "required": Model must call a tool
+                - {"type": "function", "function": {"name": "..."}}:
+                  Force specific tool
+            **kwargs: Additional arguments passed to the model.
+
+        Returns:
+            A Runnable that will pass the tools to the model.
+
+        Example:
+            .. code-block:: python
+
+                from pydantic import BaseModel, Field
+
+
+                class GetWeather(BaseModel):
+                    '''Get the weather for a location.'''
+
+                    location: str = Field(description="City name")
+
+
+                model = ChatMaritaca()
+                model_with_tools = model.bind_tools([GetWeather])
+                response = model_with_tools.invoke("What's the weather in São Paulo?")
+        """
+        formatted_tools = [convert_to_openai_tool(tool) for tool in tools]
+        return self.bind(tools=formatted_tools, tool_choice=tool_choice, **kwargs)
 
     def _generate(
         self,
