@@ -10,7 +10,14 @@ GitHub: https://github.com/anderson-ufrj
 import os
 
 import pytest
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import (
+    AIMessage,
+    BaseMessage,
+    HumanMessage,
+    SystemMessage,
+    ToolMessage,
+)
+from pydantic import BaseModel, Field
 
 from langchain_maritaca import ChatMaritaca
 
@@ -120,3 +127,89 @@ class TestChatMaritacaModels:
         model = ChatMaritaca(model="sabiazinho-3.1", temperature=0.0)  # type: ignore[arg-type]
         response = model.invoke([HumanMessage(content="Olá!")])
         assert isinstance(response, AIMessage)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("MARITACA_API_KEY"),
+    reason="MARITACA_API_KEY not set",
+)
+class TestChatMaritacaToolCalling:
+    """Integration tests for tool calling functionality."""
+
+    def test_bind_tools_with_pydantic(self) -> None:
+        """Test tool calling with a Pydantic model."""
+
+        class GetWeather(BaseModel):
+            """Get the current weather for a location."""
+
+            location: str = Field(description="The city name, e.g. São Paulo")
+
+        model = ChatMaritaca(model="sabia-3.1", temperature=0.0)  # type: ignore[arg-type]
+        model_with_tools = model.bind_tools([GetWeather])
+
+        response = model_with_tools.invoke(
+            [HumanMessage(content="Qual é o clima em Belo Horizonte?")]
+        )
+
+        assert isinstance(response, AIMessage)
+        # Model should either respond with text or call the tool
+        # We check that the response is valid
+        assert response.content is not None or len(response.tool_calls) > 0
+
+    def test_bind_tools_with_tool_choice_required(self) -> None:
+        """Test tool calling with tool_choice='required'."""
+
+        class GetTemperature(BaseModel):
+            """Get temperature for a city."""
+
+            city: str = Field(description="City name")
+
+        model = ChatMaritaca(model="sabia-3.1", temperature=0.0)  # type: ignore[arg-type]
+        model_with_tools = model.bind_tools([GetTemperature], tool_choice="required")
+
+        response = model_with_tools.invoke(
+            [HumanMessage(content="Qual a temperatura em São Paulo?")]
+        )
+
+        assert isinstance(response, AIMessage)
+        # With tool_choice="required", model must call a tool
+        assert len(response.tool_calls) > 0
+        assert response.tool_calls[0]["name"] == "GetTemperature"
+        assert "city" in response.tool_calls[0]["args"]
+
+    def test_tool_calling_conversation_loop(self) -> None:
+        """Test a full tool calling conversation loop."""
+
+        class Calculator(BaseModel):
+            """Perform basic arithmetic."""
+
+            a: int = Field(description="First number")
+            b: int = Field(description="Second number")
+            operation: str = Field(description="add, subtract, multiply, or divide")
+
+        model = ChatMaritaca(model="sabia-3.1", temperature=0.0)  # type: ignore[arg-type]
+        model_with_tools = model.bind_tools([Calculator], tool_choice="required")
+
+        # First call - model should request tool call
+        response = model_with_tools.invoke([HumanMessage(content="Quanto é 15 + 27?")])
+
+        assert isinstance(response, AIMessage)
+        assert len(response.tool_calls) > 0
+
+        # Simulate tool execution
+        tool_call = response.tool_calls[0]
+        tool_result = "42"  # 15 + 27 = 42
+
+        # Second call with tool result
+        messages = [
+            HumanMessage(content="Quanto é 15 + 27?"),
+            response,
+            ToolMessage(content=tool_result, tool_call_id=tool_call["id"]),
+        ]
+
+        # Use model without tool_choice for final response
+        final_model = ChatMaritaca(model="sabia-3.1", temperature=0.0)  # type: ignore[arg-type]
+        final_response = final_model.invoke(messages)
+
+        assert isinstance(final_response, AIMessage)
+        assert "42" in final_response.content
