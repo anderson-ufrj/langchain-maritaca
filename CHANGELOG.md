@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-12-18
+
+### Added
+
+- **Tool Calling / Function Calling**: Full support for binding tools to the model
+  - `bind_tools()` method for binding Pydantic models, functions, or tool schemas
+  - `tool_choice` parameter to control tool selection ("auto", "required", or specific tool)
+  - `ToolMessage` support for tool call responses
+  - Full conversation loop support with tool execution
+- **Message Conversion**: Extended to handle tool-related messages
+  - `AIMessage` with `tool_calls` attribute
+  - `ToolMessage` for returning tool execution results
+- **Planning Documentation**: Added `docs/planning/future-improvements.md` roadmap
+
+### Changed
+
+- Enhanced `_convert_message_to_dict()` to support tool calls in AIMessage
+- Enhanced `_convert_dict_to_message()` to parse tool calls from API response
+- Updated `_default_params` to include `tools` and `tool_choice` when configured
+
 ## [0.1.1] - 2025-12-15
 
 ### Changed
@@ -40,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Rate Limiting**: Graceful handling of API rate limits
 - **Tracing**: Built-in LangSmith integration for observability
 
-[Unreleased]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/anderson-ufrj/langchain-maritaca/releases/tag/v0.1.0
