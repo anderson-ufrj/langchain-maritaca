@@ -10,7 +10,8 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
+from pydantic import BaseModel, Field
 
 from langchain_maritaca import ChatMaritaca
 from langchain_maritaca.chat_models import (
@@ -269,3 +270,180 @@ class TestChatMaritacaLangSmith:
         assert ls_params["ls_temperature"] == 0.5
         assert ls_params["ls_max_tokens"] == 100
         assert ls_params["ls_stop"] == ["END"]
+
+
+class TestToolCalling:
+    """Test tool calling functionality."""
+
+    def test_bind_tools_with_pydantic_model(self) -> None:
+        """Test bind_tools with a Pydantic model."""
+
+        class GetWeather(BaseModel):
+            """Get weather for a location."""
+
+            location: str = Field(description="City name")
+
+        model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
+        model_with_tools = model.bind_tools([GetWeather])
+
+        # Verify the tools are bound
+        assert model_with_tools is not None
+
+    def test_bind_tools_with_function(self) -> None:
+        """Test bind_tools with a Python function."""
+
+        def get_weather(location: str) -> str:
+            """Get weather for a location.
+
+            Args:
+                location: City name
+            """
+            return f"Weather in {location}"
+
+        model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
+        model_with_tools = model.bind_tools([get_weather])
+
+        assert model_with_tools is not None
+
+    def test_bind_tools_with_tool_choice(self) -> None:
+        """Test bind_tools with tool_choice parameter."""
+
+        class GetWeather(BaseModel):
+            """Get weather for a location."""
+
+            location: str = Field(description="City name")
+
+        model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
+        model_with_tools = model.bind_tools([GetWeather], tool_choice="required")
+
+        assert model_with_tools is not None
+
+    def test_convert_tool_message_to_dict(self) -> None:
+        """Test converting ToolMessage to dict."""
+        msg = ToolMessage(content="Weather is sunny", tool_call_id="call_123")
+        result = _convert_message_to_dict(msg)
+
+        assert result["role"] == "tool"
+        assert result["content"] == "Weather is sunny"
+        assert result["tool_call_id"] == "call_123"
+
+    def test_convert_ai_message_with_tool_calls(self) -> None:
+        """Test converting AIMessage with tool_calls."""
+        msg = AIMessage(
+            content="",
+            tool_calls=[
+                {
+                    "id": "call_123",
+                    "name": "get_weather",
+                    "args": {"location": "São Paulo"},
+                }
+            ],
+        )
+        result = _convert_message_to_dict(msg)
+
+        assert result["role"] == "assistant"
+        assert result["content"] == ""
+        assert len(result["tool_calls"]) == 1
+        assert result["tool_calls"][0]["id"] == "call_123"
+        assert result["tool_calls"][0]["type"] == "function"
+        assert result["tool_calls"][0]["function"]["name"] == "get_weather"
+        assert '"location": "S\\u00e3o Paulo"' in result["tool_calls"][0]["function"]["arguments"]
+
+    def test_convert_dict_with_tool_calls_to_ai_message(self) -> None:
+        """Test converting dict with tool_calls to AIMessage."""
+        msg_dict = {
+            "role": "assistant",
+            "content": None,
+            "tool_calls": [
+                {
+                    "id": "call_456",
+                    "type": "function",
+                    "function": {
+                        "name": "get_weather",
+                        "arguments": '{"location": "Rio de Janeiro"}',
+                    },
+                }
+            ],
+        }
+        result = _convert_dict_to_message(msg_dict)
+
+        assert isinstance(result, AIMessage)
+        assert result.content == ""
+        assert len(result.tool_calls) == 1
+        assert result.tool_calls[0]["id"] == "call_456"
+        assert result.tool_calls[0]["name"] == "get_weather"
+        assert result.tool_calls[0]["args"] == {"location": "Rio de Janeiro"}
+
+    def test_convert_dict_to_tool_message(self) -> None:
+        """Test converting dict to ToolMessage."""
+        msg_dict = {
+            "role": "tool",
+            "content": "The weather is sunny",
+            "tool_call_id": "call_789",
+        }
+        result = _convert_dict_to_message(msg_dict)
+
+        assert isinstance(result, ToolMessage)
+        assert result.content == "The weather is sunny"
+        assert result.tool_call_id == "call_789"
+
+    def test_create_chat_result_with_tool_calls(self) -> None:
+        """Test _create_chat_result with tool calls in response."""
+        model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
+        response = {
+            "id": "chatcmpl-123",
+            "model": "sabia-3.1",
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": None,
+                        "tool_calls": [
+                            {
+                                "id": "call_abc",
+                                "type": "function",
+                                "function": {
+                                    "name": "get_weather",
+                                    "arguments": '{"location": "Belo Horizonte"}',
+                                },
+                            }
+                        ],
+                    },
+                    "finish_reason": "tool_calls",
+                }
+            ],
+            "usage": {"prompt_tokens": 20, "completion_tokens": 15, "total_tokens": 35},
+        }
+
+        result = model._create_chat_result(response)
+
+        assert len(result.generations) == 1
+        message = result.generations[0].message
+        assert isinstance(message, AIMessage)
+        assert len(message.tool_calls) == 1
+        assert message.tool_calls[0]["name"] == "get_weather"
+        assert message.tool_calls[0]["args"] == {"location": "Belo Horizonte"}
+        assert result.generations[0].generation_info["finish_reason"] == "tool_calls"
+
+    def test_default_params_with_tools(self) -> None:
+        """Test _default_params includes tools when set."""
+        tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "test_func",
+                    "description": "A test function",
+                    "parameters": {"type": "object", "properties": {}},
+                },
+            }
+        ]
+        model = ChatMaritaca(
+            api_key="test-key",  # type: ignore[arg-type]
+            tools=tools,
+            tool_choice="auto",
+        )
+        params = model._default_params
+
+        assert params["tools"] == tools
+        assert params["tool_choice"] == "auto"
