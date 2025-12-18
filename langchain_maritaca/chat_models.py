@@ -34,8 +34,10 @@ from langchain_core.messages import (
     ChatMessage,
     HumanMessage,
     SystemMessage,
+    ToolMessage,
 )
 from langchain_core.messages.ai import UsageMetadata
+from langchain_core.messages.tool import ToolCall
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from langchain_core.runnables import Runnable
 from langchain_core.tools import BaseTool
@@ -584,9 +586,32 @@ def _convert_message_to_dict(message: BaseMessage) -> dict[str, Any]:
     if isinstance(message, HumanMessage):
         return {"role": "user", "content": message.content}
     if isinstance(message, AIMessage):
-        return {"role": "assistant", "content": message.content}
+        result: dict[str, Any] = {
+            "role": "assistant",
+            "content": message.content or "",
+        }
+        # Handle tool calls in AIMessage
+        if message.tool_calls:
+            result["tool_calls"] = [
+                {
+                    "id": tc["id"],
+                    "type": "function",
+                    "function": {
+                        "name": tc["name"],
+                        "arguments": json.dumps(tc["args"]),
+                    },
+                }
+                for tc in message.tool_calls
+            ]
+        return result
     if isinstance(message, SystemMessage):
         return {"role": "system", "content": message.content}
+    if isinstance(message, ToolMessage):
+        return {
+            "role": "tool",
+            "content": message.content,
+            "tool_call_id": message.tool_call_id,
+        }
     msg = f"Got unknown message type: {type(message)}"
     raise TypeError(msg)
 
@@ -601,14 +626,36 @@ def _convert_dict_to_message(message_dict: Mapping[str, Any]) -> BaseMessage:
         LangChain BaseMessage.
     """
     role = message_dict.get("role", "")
-    content = message_dict.get("content", "")
+    content = message_dict.get("content", "") or ""
 
     if role == "user":
         return HumanMessage(content=content)
     if role == "assistant":
-        return AIMessage(content=content)
+        # Parse tool_calls if present
+        tool_calls_data = message_dict.get("tool_calls", [])
+        tool_calls = []
+        for tc in tool_calls_data:
+            func = tc.get("function", {})
+            args_str = func.get("arguments", "{}")
+            try:
+                args = json.loads(args_str)
+            except json.JSONDecodeError:
+                args = {}
+            tool_calls.append(
+                ToolCall(
+                    name=func.get("name", ""),
+                    args=args,
+                    id=tc.get("id", ""),
+                )
+            )
+        return AIMessage(content=content, tool_calls=tool_calls if tool_calls else [])
     if role == "system":
         return SystemMessage(content=content)
+    if role == "tool":
+        return ToolMessage(
+            content=content,
+            tool_call_id=message_dict.get("tool_call_id", ""),
+        )
     return ChatMessage(content=content, role=role)
 
 
