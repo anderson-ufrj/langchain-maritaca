@@ -347,7 +347,10 @@ class TestToolCalling:
         assert result["tool_calls"][0]["id"] == "call_123"
         assert result["tool_calls"][0]["type"] == "function"
         assert result["tool_calls"][0]["function"]["name"] == "get_weather"
-        assert '"location": "S\\u00e3o Paulo"' in result["tool_calls"][0]["function"]["arguments"]
+        assert (
+            '"location": "S\\u00e3o Paulo"'
+            in result["tool_calls"][0]["function"]["arguments"]
+        )
 
     def test_convert_dict_with_tool_calls_to_ai_message(self) -> None:
         """Test converting dict with tool_calls to AIMessage."""
