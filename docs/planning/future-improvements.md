@@ -22,19 +22,48 @@ vectors = embeddings.embed_documents(["Hello", "World"])
 Implement `with_structured_output()` method to return Pydantic models directly.
 
 ```python
-class Person(BaseModel):
-    name: str
-    age: int
+from pydantic import BaseModel, Field
+from typing import List, Optional
+
+class MedicalEntity(BaseModel):
+    value: str = Field(..., description="Entity value")
+    confidence: float = Field(1.0, ge=0, le=1, description="Confidence score")
+
+class MedicalEntities(BaseModel):
+    symptoms: List[MedicalEntity] = Field(default_factory=list)
+    medications: List[MedicalEntity] = Field(default_factory=list)
+    diagnoses: List[MedicalEntity] = Field(default_factory=list)
 
 model = ChatMaritaca()
-structured_model = model.with_structured_output(Person)
-person = structured_model.invoke("Extract: João has 25 years")
-# Returns Person(name="João", age=25)
+structured_model = model.with_structured_output(MedicalEntities)
+result = structured_model.invoke("Paciente com dor de cabeça, receitado paracetamol")
+# Returns MedicalEntities(symptoms=[...], medications=[...], diagnoses=[...])
 ```
 
-**Status**: Planned
+**Real Use Case**: TelepatiaAI Medical Scribe application needs to extract structured medical data (SOAP notes, symptoms, medications) from Portuguese transcriptions. Currently requires manual JSON parsing which is error-prone when the LLM returns null for optional fields.
+
+**Implementation Approach**:
+1. Use `bind_tools()` internally with Pydantic model as tool schema
+2. Parse tool call response and return validated Pydantic instance
+3. Reference implementations:
+   - `langchain-anthropic`: Uses Claude's native tool_use feature
+   - `langchain-openai`: Uses function calling with JSON schema
+
+**API Signature** (following LangChain conventions):
+```python
+def with_structured_output(
+    self,
+    schema: Type[BaseModel],
+    *,
+    include_raw: bool = False,
+    method: Literal["function_calling", "json_mode"] = "function_calling",
+) -> Runnable[LanguageModelInput, BaseModel]:
+    ...
+```
+
+**Status**: Planned - HIGH PRIORITY
 **Complexity**: Medium
-**Impact**: High - Simplifies data extraction tasks
+**Impact**: High - Simplifies data extraction tasks, enables medical AI applications
 
 ---
 
