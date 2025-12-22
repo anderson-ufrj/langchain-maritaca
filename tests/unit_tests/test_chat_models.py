@@ -539,5 +539,6 @@ class TestStructuredOutput:
 
         with pytest.raises(ValueError, match="Unrecognized method argument"):
             model.with_structured_output(
-                Person, method="invalid_method"  # type: ignore[arg-type]
+                Person,
+                method="invalid_method",  # type: ignore[arg-type]
             )

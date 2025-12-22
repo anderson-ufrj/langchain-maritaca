@@ -239,9 +239,7 @@ class TestDeepInfraEmbeddingsAsync:
         }
 
     @pytest.mark.asyncio
-    async def test_aembed_query(
-        self, mock_embedding_response: dict[str, Any]
-    ) -> None:
+    async def test_aembed_query(self, mock_embedding_response: dict[str, Any]) -> None:
         """Test aembed_query method with mocked async HTTP client."""
         embeddings = DeepInfraEmbeddings(api_key="test-key")  # type: ignore[arg-type]
 

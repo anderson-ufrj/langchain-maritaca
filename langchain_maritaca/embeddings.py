@@ -67,10 +67,12 @@ class DeepInfraEmbeddings(BaseModel, Embeddings):
 
     Embed multiple texts:
         ```python
-        vectors = embeddings.embed_documents([
-            "Primeiro documento",
-            "Segundo documento",
-        ])
+        vectors = embeddings.embed_documents(
+            [
+                "Primeiro documento",
+                "Segundo documento",
+            ]
+        )
         print(len(vectors))  # 2
         print(len(vectors[0]))  # 1024
         ```
@@ -131,9 +133,7 @@ class DeepInfraEmbeddings(BaseModel, Embeddings):
     def validate_environment(self) -> Self:
         """Validate that API key exists and initialize HTTP clients."""
         api_key = (
-            self.deepinfra_api_key.get_secret_value()
-            if self.deepinfra_api_key
-            else ""
+            self.deepinfra_api_key.get_secret_value() if self.deepinfra_api_key else ""
         )
         headers = {
             "Authorization": f"Bearer {api_key}",
