@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 1024-dimensional embeddings, supports 100 languages including Portuguese
   - Sync and async methods: `embed_query`, `embed_documents`, `aembed_query`, `aembed_documents`
   - Automatic batching with configurable `batch_size`
+- **Bilingual Documentation**: MkDocs site with PT-BR and English support
+  - Complete user guide, API reference, and examples
+  - Dark/light mode toggle
+  - Available at GitHub Pages
 
 ## [0.2.1] - 2025-12-21
 
