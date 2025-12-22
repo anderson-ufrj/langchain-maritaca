@@ -66,6 +66,9 @@ venv.bak/
 *.swo
 *~
 
+# Claude Code
+CLAUDE.md
+
 # mypy
 .mypy_cache/
 .dmypy.json
