@@ -4,17 +4,27 @@ This document outlines planned improvements and enhancements for the langchain-m
 
 ## High Priority
 
-### 1. Embeddings Support
-Add `MaritacaEmbeddings` class for RAG (Retrieval-Augmented Generation) workflows.
+### 1. ~~Embeddings Support~~ ✅ IMPLEMENTED (v0.2.2)
+~~Add embeddings class for RAG (Retrieval-Augmented Generation) workflows.~~
+
+Since Maritaca AI does not provide native embeddings, we implemented `DeepInfraEmbeddings`
+using the `intfloat/multilingual-e5-large` model as recommended by Maritaca AI.
 
 ```python
-from langchain_maritaca import MaritacaEmbeddings
+from langchain_maritaca import DeepInfraEmbeddings
 
-embeddings = MaritacaEmbeddings()
-vectors = embeddings.embed_documents(["Hello", "World"])
+embeddings = DeepInfraEmbeddings()
+vectors = embeddings.embed_documents(["Olá", "Mundo"])
+# Each vector has 1024 dimensions
 ```
 
-**Status**: Planned
+**Features**:
+- Sync and async methods (embed_query, embed_documents, aembed_query, aembed_documents)
+- Automatic batching with configurable batch_size
+- Supports 100 languages including Portuguese
+- Model: `intfloat/multilingual-e5-large` (1024 dimensions, 512 max tokens)
+
+**Status**: ✅ IMPLEMENTED
 **Complexity**: Medium
 **Impact**: High - Enables complete RAG pipelines with Maritaca
 
