@@ -8,6 +8,7 @@ GitHub: https://github.com/anderson-ufrj
 """
 
 from langchain_maritaca.chat_models import ChatMaritaca
+from langchain_maritaca.embeddings import DeepInfraEmbeddings
 from langchain_maritaca.version import __version__
 
-__all__ = ["ChatMaritaca", "__version__"]
+__all__ = ["ChatMaritaca", "DeepInfraEmbeddings", "__version__"]
