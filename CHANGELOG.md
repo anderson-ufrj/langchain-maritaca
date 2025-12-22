@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2025-12-22
+
+### Added
+
+- **Structured Output**: `with_structured_output()` method for ChatMaritaca
+  - Returns Pydantic models or dicts directly from LLM responses
+  - Supports `function_calling` (default) and `json_mode` methods
+  - `include_raw` option to return raw response alongside parsed output
+- **Embeddings Support**: `DeepInfraEmbeddings` class for RAG workflows
+  - Uses `intfloat/multilingual-e5-large` model (recommended by Maritaca AI)
+  - 1024-dimensional embeddings, supports 100 languages including Portuguese
+  - Sync and async methods: `embed_query`, `embed_documents`, `aembed_query`, `aembed_documents`
+  - Automatic batching with configurable `batch_size`
+
 ## [0.2.1] - 2025-12-21
 
 ### Fixed
@@ -66,7 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Rate Limiting**: Graceful handling of API rate limits
 - **Tracing**: Built-in LangSmith integration for observability
 
-[Unreleased]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.1.0...v0.1.1
