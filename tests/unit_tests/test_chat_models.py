@@ -450,3 +450,94 @@ class TestToolCalling:
 
         assert params["tools"] == tools
         assert params["tool_choice"] == "auto"
+
+
+class TestStructuredOutput:
+    """Test structured output functionality."""
+
+    def test_with_structured_output_pydantic_function_calling(self) -> None:
+        """Test with_structured_output with Pydantic model using function_calling."""
+
+        class Person(BaseModel):
+            """Information about a person."""
+
+            name: str = Field(description="Person's name")
+            age: int = Field(description="Person's age")
+
+        model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
+        structured_model = model.with_structured_output(Person)
+
+        # Verify a runnable is returned
+        assert structured_model is not None
+        # Verify it's a chain (llm | parser)
+        assert hasattr(structured_model, "invoke")
+
+    def test_with_structured_output_dict_schema(self) -> None:
+        """Test with_structured_output with dict schema."""
+        schema = {
+            "title": "Person",
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "age": {"type": "integer"},
+            },
+            "required": ["name", "age"],
+        }
+
+        model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
+        structured_model = model.with_structured_output(schema)
+
+        assert structured_model is not None
+        assert hasattr(structured_model, "invoke")
+
+    def test_with_structured_output_json_mode(self) -> None:
+        """Test with_structured_output with json_mode method."""
+
+        class Person(BaseModel):
+            """Information about a person."""
+
+            name: str = Field(description="Person's name")
+            age: int = Field(description="Person's age")
+
+        model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
+        structured_model = model.with_structured_output(Person, method="json_mode")
+
+        assert structured_model is not None
+        assert hasattr(structured_model, "invoke")
+
+    def test_with_structured_output_include_raw(self) -> None:
+        """Test with_structured_output with include_raw=True."""
+
+        class Person(BaseModel):
+            """Information about a person."""
+
+            name: str = Field(description="Person's name")
+            age: int = Field(description="Person's age")
+
+        model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
+        structured_model = model.with_structured_output(Person, include_raw=True)
+
+        assert structured_model is not None
+        assert hasattr(structured_model, "invoke")
+
+    def test_with_structured_output_no_schema_raises(self) -> None:
+        """Test that with_structured_output raises error without schema."""
+        model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
+
+        with pytest.raises(ValueError, match="schema must be specified"):
+            model.with_structured_output(None)
+
+    def test_with_structured_output_invalid_method_raises(self) -> None:
+        """Test that with_structured_output raises error with invalid method."""
+
+        class Person(BaseModel):
+            """Information about a person."""
+
+            name: str = Field(description="Person's name")
+
+        model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
+
+        with pytest.raises(ValueError, match="Unrecognized method argument"):
+            model.with_structured_output(
+                Person, method="invalid_method"  # type: ignore[arg-type]
+            )
