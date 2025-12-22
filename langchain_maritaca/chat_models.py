@@ -14,7 +14,8 @@ import asyncio
 import json
 import time
 from collections.abc import AsyncIterator, Callable, Iterator, Mapping, Sequence
-from typing import Any
+from operator import itemgetter
+from typing import Any, Literal
 
 import httpx
 from langchain_core.callbacks import (
@@ -38,12 +39,17 @@ from langchain_core.messages import (
 )
 from langchain_core.messages.ai import UsageMetadata
 from langchain_core.messages.tool import ToolCall
+from langchain_core.output_parsers import JsonOutputParser, PydanticOutputParser
+from langchain_core.output_parsers.openai_tools import (
+    JsonOutputKeyToolsParser,
+    PydanticToolsParser,
+)
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
-from langchain_core.runnables import Runnable
+from langchain_core.runnables import Runnable, RunnableMap, RunnablePassthrough
 from langchain_core.tools import BaseTool
 from langchain_core.utils import from_env, secret_from_env
 from langchain_core.utils.function_calling import convert_to_openai_tool
-from pydantic import ConfigDict, Field, SecretStr, model_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 from typing_extensions import Self
 
 from langchain_maritaca.version import __version__
@@ -332,6 +338,115 @@ class ChatMaritaca(BaseChatModel):
         """
         formatted_tools = [convert_to_openai_tool(tool) for tool in tools]
         return self.bind(tools=formatted_tools, tool_choice=tool_choice, **kwargs)
+
+    def with_structured_output(
+        self,
+        schema: dict[str, Any] | type[BaseModel] | None = None,
+        *,
+        method: Literal["function_calling", "json_mode"] = "function_calling",
+        include_raw: bool = False,
+        **kwargs: Any,
+    ) -> Runnable[Any, dict[str, Any] | BaseModel]:
+        """Create a runnable that returns structured output matching a schema.
+
+        Uses the model's tool-calling or JSON mode capabilities to guarantee
+        output conforms to the specified schema.
+
+        Args:
+            schema: The output schema. Can be:
+                - A Pydantic BaseModel class
+                - A dictionary with JSON Schema
+            method: The method to use for structured output:
+                - "function_calling": Uses tool calling (default, recommended)
+                - "json_mode": Uses JSON response format
+            include_raw: If True, returns a dict with keys:
+                - "raw": The raw model response (BaseMessage)
+                - "parsed": The parsed structured output
+                - "parsing_error": Any parsing error that occurred
+            **kwargs: Additional arguments passed to the model.
+
+        Returns:
+            A Runnable that outputs structured data matching the schema.
+
+        Example:
+            .. code-block:: python
+
+                from pydantic import BaseModel, Field
+
+
+                class Person(BaseModel):
+                    '''Information about a person.'''
+
+                    name: str = Field(description="Person's name")
+                    age: int = Field(description="Person's age")
+
+
+                model = ChatMaritaca()
+                structured_model = model.with_structured_output(Person)
+                result = structured_model.invoke("João tem 25 anos")
+                # Returns: Person(name="João", age=25)
+
+        Note:
+            The "function_calling" method is more reliable as it uses the
+            model's native tool calling capabilities.
+        """
+        if schema is None:
+            msg = "schema must be specified for with_structured_output"
+            raise ValueError(msg)
+
+        is_pydantic_schema = isinstance(schema, type) and issubclass(schema, BaseModel)
+
+        if method == "function_calling":
+            formatted_tool = convert_to_openai_tool(schema)
+            tool_name = formatted_tool["function"]["name"]
+            llm = self.bind_tools(
+                [schema],
+                tool_choice={"type": "function", "function": {"name": tool_name}},
+                **kwargs,
+            )
+            if is_pydantic_schema:
+                # Type narrowing: we know schema is type[BaseModel] here
+                pydantic_schema: type[BaseModel] = schema  # type: ignore[assignment]
+                output_parser: Runnable[Any, Any] = PydanticToolsParser(
+                    tools=[pydantic_schema],
+                    first_tool_only=True,
+                )
+            else:
+                output_parser = JsonOutputKeyToolsParser(
+                    key_name=tool_name, first_tool_only=True
+                )
+
+        elif method == "json_mode":
+            llm = self.bind(
+                response_format={"type": "json_object"},
+                **kwargs,
+            )
+            if is_pydantic_schema:
+                # Type narrowing: we know schema is type[BaseModel] here
+                pydantic_schema = schema  # type: ignore[assignment]
+                output_parser = PydanticOutputParser(pydantic_object=pydantic_schema)
+            else:
+                output_parser = JsonOutputParser()
+
+        else:
+            msg = (
+                f"Unrecognized method argument. Expected 'function_calling' or "
+                f"'json_mode'. Received: '{method}'"
+            )
+            raise ValueError(msg)
+
+        if include_raw:
+            parser_assign = RunnablePassthrough.assign(
+                parsed=itemgetter("raw") | output_parser,
+                parsing_error=lambda _: None,
+            )
+            parser_none = RunnablePassthrough.assign(parsed=lambda _: None)
+            parser_with_fallback = parser_assign.with_fallbacks(
+                [parser_none], exception_key="parsing_error"
+            )
+            return RunnableMap(raw=llm) | parser_with_fallback
+
+        return llm | output_parser
 
     def _generate(
         self,
