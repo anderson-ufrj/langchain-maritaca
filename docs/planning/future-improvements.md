@@ -144,16 +144,30 @@ in CI workflow, now the badge is visible to users.
 
 ## Low Priority
 
-### 7. Token Counter
-Implement `get_num_tokens()` method to estimate token count before API calls.
+### 7. ~~Token Counter~~ ✅ IMPLEMENTED
+~~Implement `get_num_tokens()` method to estimate token count before API calls.~~
+
+Implemented token counting and cost estimation methods:
+- `get_num_tokens()` - Count tokens in text
+- `get_num_tokens_from_messages()` - Count tokens in messages
+- `estimate_cost()` - Estimate request cost before making it
 
 ```python
+from langchain_maritaca import ChatMaritaca
+from langchain_core.messages import HumanMessage
+
 model = ChatMaritaca()
 tokens = model.get_num_tokens("Olá, como vai você?")
+
+messages = [HumanMessage(content="Hello")]
+estimate = model.estimate_cost(messages, max_output_tokens=1000)
+print(f"Estimated cost: ${estimate['total_cost']:.6f}")
 ```
 
-**Status**: Planned
-**Complexity**: Medium (requires tokenizer)
+Install with `pip install langchain-maritaca[tokenizer]` for accurate counting.
+
+**Status**: ✅ IMPLEMENTED
+**Complexity**: Medium
 **Impact**: Medium - Helps with cost estimation
 
 ### 8. Batch Optimization
