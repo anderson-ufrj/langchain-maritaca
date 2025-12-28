@@ -18,14 +18,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `retry_multiplier`: Exponential backoff multiplier (default: `2.0`)
   - Validation for all retry parameters
   - Works for both sync and async requests
+- **Cache Integration**: LangChain's native caching works out of the box
+  - Supports `InMemoryCache`, `SQLiteCache`, `RedisCache`
+  - Reduces API costs for repeated queries
+  - No code changes required, just set global cache
+- **Enhanced Callbacks**: Callback handlers for observability
+  - `CostTrackingCallback`: Track token usage and estimate API costs
+  - `LatencyTrackingCallback`: Measure response times with P50/P95/P99 percentiles
+  - `TokenStreamingCallback`: Monitor streaming token rates
+  - `CombinedCallback`: Combined cost and latency tracking
+- **Token Counting & Cost Estimation**: Pre-request cost estimation
+  - `get_num_tokens()`: Count tokens in text using tiktoken (with fallback)
+  - `get_num_tokens_from_messages()`: Count tokens in messages with overhead
+  - `estimate_cost()`: Estimate request cost before making it
+  - Optional `tiktoken` dependency: `pip install langchain-maritaca[tokenizer]`
 - **Codecov Badge**: Test coverage badge in README
 - **Portuguese README**: Complete translation of README to Brazilian Portuguese (`README.pt-br.md`)
 - **Consolidated Roadmap**: Detailed implementation steps in `docs/planning/ROADMAP.md`
+- **Documentation**: Comprehensive guides for caching, callbacks, and token counting
 
 ### Changed
 
 - Improved retry logic with exponential backoff using configurable parameters
 - Rate limit retry can now be disabled with `retry_if_rate_limited=False`
+- Test coverage increased to 107 unit tests
 
 ## [0.2.2] - 2025-12-22
 
