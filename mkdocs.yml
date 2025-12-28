@@ -68,6 +68,7 @@ plugins:
             Integração LCEL: LCEL Integration
             Cache: Caching
             Callbacks: Callbacks
+            Contagem de Tokens: Token Counting
             Referência da API: API Reference
             Exemplos: Examples
             Chatbot: Chatbot
@@ -129,6 +130,7 @@ nav:
     - Integração LCEL: guide/lcel.md
     - Cache: guide/caching.md
     - Callbacks: guide/callbacks.md
+    - Contagem de Tokens: guide/token-counting.md
   - Referência da API:
     - ChatMaritaca: api/chat-maritaca.md
   - Exemplos:
