@@ -14,7 +14,7 @@ Consolidated roadmap with detailed implementation steps for each planned feature
 | ~~Cache Integration~~ | High | Low | **IMPLEMENTED** |
 | ~~Configurable Retry Logic~~ | High | Low | **IMPLEMENTED** |
 | ~~Enhanced Callbacks~~ | Medium | Low | **IMPLEMENTED** |
-| Token Counter | Medium | Medium | Planned |
+| ~~Token Counter~~ | Medium | Medium | **IMPLEMENTED** |
 | Batch Optimization | Low | Medium | Planned |
 | Multimodal/Vision Support | Low | High | Blocked (API) |
 
@@ -121,52 +121,40 @@ print(f"P95: {latency_cb.p95_latency:.2f}s")
 
 ---
 
-### 4. Token Counter
+### 4. ~~Token Counter~~ ✅ IMPLEMENTED
 
 **Goal:** Implement `get_num_tokens()` for cost estimation before API calls.
 
-**Implementation Steps:**
+**Implemented Methods:**
+- `get_num_tokens()` - Count tokens in text using tiktoken (or fallback)
+- `get_num_tokens_from_messages()` - Count tokens in message list with overhead
+- `estimate_cost()` - Estimate request cost before making it
 
-1. **Research tokenization options**
-   - Check if Maritaca publishes their tokenizer
-   - Evaluate `tiktoken` as approximation
-   - Consider `sentencepiece` for Portuguese
+**Usage:**
+```python
+from langchain_maritaca import ChatMaritaca
+from langchain_core.messages import HumanMessage
 
-2. **Choose tokenization strategy**
-   - Option A: Use tiktoken cl100k_base as approximation
-   - Option B: Implement character-based estimation
-   - Option C: Call Maritaca API for exact count (if available)
+model = ChatMaritaca(model="sabia-3.1")
 
-3. **Implement `get_num_tokens()` method**
-   - File: `langchain_maritaca/chat_models.py`
-   - Handle different input types (str, list of messages)
-   - Return token count estimate
+# Count tokens in text
+tokens = model.get_num_tokens("Olá, como você está?")
 
-4. **Implement `get_num_tokens_from_messages()`**
-   - Handle message formatting overhead
-   - Account for system/user/assistant prefixes
+# Estimate cost before request
+messages = [HumanMessage(content="Tell me about Brazil")]
+estimate = model.estimate_cost(messages, max_output_tokens=1000)
+print(f"Estimated cost: ${estimate['total_cost']:.6f}")
+```
 
-5. **Add cost estimation utility**
-   ```python
-   def estimate_cost(self, messages: list, max_output_tokens: int = 1000) -> float:
-       input_tokens = self.get_num_tokens_from_messages(messages)
-       # Calculate based on Maritaca pricing
-   ```
+**Features:**
+- Uses tiktoken cl100k_base for accurate counting
+- Character-based fallback if tiktoken not installed
+- Accounts for message formatting overhead
+- Pricing for sabia-3.1 and sabiazinho-3.1 models
 
-6. **Add tests**
-   - Test token counting accuracy
-   - Test cost estimation
-   - Compare with actual API usage
-
-7. **Add documentation**
-   - Usage examples
-   - Accuracy disclaimers
-
-**Files to modify:**
-- `langchain_maritaca/chat_models.py`
-- `pyproject.toml` (add tiktoken dependency, optional)
-- `tests/unit_tests/test_token_counter.py` (new)
-- `docs/en/guide/cost-estimation.md` (new)
+**Status:** ✅ IMPLEMENTED
+**Complexity:** Medium
+**Impact:** Medium - Enables cost estimation before API calls
 
 ---
 
@@ -252,6 +240,7 @@ print(f"P95: {latency_cb.p95_latency:.2f}s")
 | Configurable Retry Logic | v0.2.3 | Dec 2025 |
 | Cache Integration | v0.2.4 | Dec 2025 |
 | Enhanced Callbacks | v0.2.4 | Dec 2025 |
+| Token Counter | v0.2.4 | Dec 2025 |
 
 ---
 
