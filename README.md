@@ -153,6 +153,28 @@ response1 = model.invoke("Qual é a capital do Brasil?")
 response2 = model.invoke("Qual é a capital do Brasil?")
 ```
 
+### With Callbacks for Observability
+
+```python
+from langchain_maritaca import ChatMaritaca, CostTrackingCallback, LatencyTrackingCallback
+
+# Create callbacks for monitoring
+cost_cb = CostTrackingCallback()
+latency_cb = LatencyTrackingCallback()
+
+model = ChatMaritaca(callbacks=[cost_cb, latency_cb])
+
+# Make some calls
+model.invoke("Hello!")
+model.invoke("How are you?")
+
+# Check metrics
+print(f"Total cost: ${cost_cb.total_cost:.6f}")
+print(f"Total tokens: {cost_cb.total_tokens}")
+print(f"Average latency: {latency_cb.average_latency:.2f}s")
+print(f"P95 latency: {latency_cb.p95_latency:.2f}s")
+```
+
 ## Why Maritaca AI?
 
 Maritaca AI models are specifically trained for Brazilian Portuguese, offering:
