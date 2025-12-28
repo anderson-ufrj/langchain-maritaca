@@ -168,6 +168,25 @@ vectors = embeddings.embed_documents([
 chat = ChatMaritaca(model="sabia-3.1")
 ```
 
+### Com Cache
+
+```python
+from langchain_core.caches import InMemoryCache
+from langchain_core.globals import set_llm_cache
+from langchain_maritaca import ChatMaritaca
+
+# Habilitar cache globalmente
+set_llm_cache(InMemoryCache())
+
+model = ChatMaritaca(model="sabia-3.1")
+
+# Primeira chamada - acessa a API
+response1 = model.invoke("Qual é a capital do Brasil?")
+
+# Segunda chamada - usa cache (instantâneo, sem custo de API!)
+response2 = model.invoke("Qual é a capital do Brasil?")
+```
+
 ## Por que Maritaca AI?
 
 Os modelos da Maritaca AI são especificamente treinados para Português Brasileiro, oferecendo:
