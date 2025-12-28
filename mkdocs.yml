@@ -66,6 +66,7 @@ plugins:
             Suporte Async: Async Support
             Chamada de Ferramentas: Tool Calling
             Integração LCEL: LCEL Integration
+            Cache: Caching
             Referência da API: API Reference
             Exemplos: Examples
             Chatbot: Chatbot
@@ -125,6 +126,7 @@ nav:
     - Suporte Async: guide/async.md
     - Chamada de Ferramentas: guide/tool-calling.md
     - Integração LCEL: guide/lcel.md
+    - Cache: guide/caching.md
   - Referência da API:
     - ChatMaritaca: api/chat-maritaca.md
   - Exemplos:
