@@ -3,7 +3,7 @@
 Consolidated roadmap with detailed implementation steps for each planned feature.
 
 > **Last Updated:** December 2025
-> **Current Version:** v0.2.4
+> **Current Version:** v0.2.3
 
 ---
 
@@ -158,6 +158,45 @@ print(f"Estimated cost: ${estimate['total_cost']:.6f}")
 
 ---
 
+## v0.2.4 PLANNING
+
+The next version will focus on performance optimizations and advanced features.
+
+### Planned Features for v0.2.4
+
+| Feature | Priority | Complexity | Status |
+|---------|----------|------------|--------|
+| Batch Optimization | Medium | Medium | Planned |
+| Context Window Management | Medium | Low | Planned |
+| Model Selection Helper | Low | Low | Planned |
+
+### Context Window Management
+
+**Goal:** Add helpers for managing context window limits.
+
+**Planned Features:**
+- `max_context_tokens` parameter to limit input tokens
+- Automatic message truncation when exceeding limits
+- Warning when approaching context limits
+- `truncate_messages()` utility method
+
+**Complexity:** Low
+**Impact:** Medium - Prevents context overflow errors
+
+### Model Selection Helper
+
+**Goal:** Utility to recommend the best model for a task.
+
+**Planned Features:**
+- `recommend_model()` method based on task complexity
+- Cost vs performance trade-off analysis
+- Automatic model selection based on input size
+
+**Complexity:** Low
+**Impact:** Low - Developer convenience
+
+---
+
 ## LOW PRIORITY
 
 ### 5. Batch Optimization
@@ -238,9 +277,9 @@ print(f"Estimated cost: ${estimate['total_cost']:.6f}")
 | Coverage Badge | v0.2.3 | Dec 2025 |
 | Bilingual Documentation | v0.2.3 | Dec 2025 |
 | Configurable Retry Logic | v0.2.3 | Dec 2025 |
-| Cache Integration | v0.2.4 | Dec 2025 |
-| Enhanced Callbacks | v0.2.4 | Dec 2025 |
-| Token Counter | v0.2.4 | Dec 2025 |
+| Cache Integration | v0.2.3 | Dec 2025 |
+| Enhanced Callbacks | v0.2.3 | Dec 2025 |
+| Token Counter | v0.2.3 | Dec 2025 |
 
 ---
 
