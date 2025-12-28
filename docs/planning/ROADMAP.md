@@ -11,7 +11,7 @@ Consolidated roadmap with detailed implementation steps for each planned feature
 
 | Feature | Priority | Complexity | Status |
 |---------|----------|------------|--------|
-| Cache Integration | High | Low | Planned |
+| ~~Cache Integration~~ | High | Low | **IMPLEMENTED** |
 | ~~Configurable Retry Logic~~ | High | Low | **IMPLEMENTED** |
 | Enhanced Callbacks | Medium | Low | Planned |
 | Token Counter | Medium | Medium | Planned |
@@ -22,47 +22,34 @@ Consolidated roadmap with detailed implementation steps for each planned feature
 
 ## HIGH PRIORITY
 
-### 1. Cache Integration
+### 1. ~~Cache Integration~~ ✅ IMPLEMENTED
 
 **Goal:** Enable LangChain's native caching to reduce API costs for repeated queries.
 
-**Implementation Steps:**
+**Result:** LangChain's caching works natively with ChatMaritaca! No code changes needed.
 
-1. **Research LangChain caching mechanism**
-   - Read `langchain-core` source for `BaseChatModel` caching
-   - Check if `_generate` method needs modification
-   - Understand cache key generation
+**Usage:**
+```python
+from langchain_core.caches import InMemoryCache
+from langchain_core.globals import set_llm_cache
+from langchain_maritaca import ChatMaritaca
 
-2. **Verify current behavior**
-   - Test if `set_llm_cache()` already works with ChatMaritaca
-   - If it works, just add documentation and examples
-   - If not, identify what needs to be implemented
+set_llm_cache(InMemoryCache())
+model = ChatMaritaca()
 
-3. **Implement cache support (if needed)**
-   - File: `langchain_maritaca/chat_models.py`
-   - Ensure `_generate` properly interacts with LangChain cache
-   - Handle cache serialization for Maritaca responses
+# First call hits API, second call uses cache
+response1 = model.invoke("Hello")  # API call
+response2 = model.invoke("Hello")  # Cache hit (instant!)
+```
 
-4. **Add unit tests**
-   - File: `tests/unit_tests/test_chat_models.py`
-   - Test cache hit/miss scenarios
-   - Test cache invalidation
-   - Test with different cache backends (InMemory, Redis mock)
+**Supported cache backends:**
+- `InMemoryCache` - Simple in-memory caching
+- `SQLiteCache` - Persistent file-based caching
+- `RedisCache` - Distributed caching for production
 
-5. **Add documentation**
-   - File: `docs/en/guide/caching.md` and `docs/pt-br/guide/caching.md`
-   - Usage examples
-   - Performance comparison with/without cache
-
-6. **Update README**
-   - Add caching example in usage section
-
-**Files to modify:**
-- `langchain_maritaca/chat_models.py`
-- `tests/unit_tests/test_chat_models.py`
-- `docs/en/guide/caching.md` (new)
-- `docs/pt-br/guide/caching.md` (new)
-- `mkdocs.yml` (add nav entry)
+**Status:** ✅ IMPLEMENTED
+**Complexity:** Low (native LangChain support)
+**Impact:** Medium - Reduces costs for repeated queries
 
 ---
 
@@ -269,6 +256,7 @@ model = ChatMaritaca(
 | Coverage Badge | v0.2.3 | Dec 2025 |
 | Bilingual Documentation | v0.2.3 | Dec 2025 |
 | Configurable Retry Logic | v0.2.3 | Dec 2025 |
+| Cache Integration | v0.2.4 | Dec 2025 |
 
 ---
 
