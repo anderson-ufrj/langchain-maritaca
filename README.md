@@ -7,6 +7,8 @@
 [![CI](https://github.com/anderson-ufrj/langchain-maritaca/actions/workflows/ci.yml/badge.svg)](https://github.com/anderson-ufrj/langchain-maritaca/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/anderson-ufrj/langchain-maritaca/graph/badge.svg)](https://codecov.io/gh/anderson-ufrj/langchain-maritaca)
 
+[🇧🇷 Leia em Português](README.pt-br.md)
+
 An integration package connecting [Maritaca AI](https://www.maritaca.ai/) and [LangChain](https://langchain.com/) for Brazilian Portuguese language models.
 
 **Author:** Anderson Henrique da Silva
