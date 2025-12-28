@@ -60,19 +60,28 @@ result = structured_model.invoke("João tem 25 anos")
 
 ## Medium Priority
 
-### 3. Cache Integration
-Add native support for LangChain caching to reduce API costs.
+### 3. ~~Cache Integration~~ ✅ IMPLEMENTED
+~~Add native support for LangChain caching to reduce API costs.~~
+
+LangChain's native caching works out of the box with ChatMaritaca!
 
 ```python
 from langchain_core.caches import InMemoryCache
 from langchain_core.globals import set_llm_cache
+from langchain_maritaca import ChatMaritaca
 
 set_llm_cache(InMemoryCache())
-model = ChatMaritaca()  # Now uses cache automatically
+model = ChatMaritaca()
+
+# First call hits API, second call uses cache
+response1 = model.invoke("Hello")  # API call
+response2 = model.invoke("Hello")  # Cache hit (instant!)
 ```
 
-**Status**: Planned
-**Complexity**: Low
+**Supported backends**: InMemoryCache, SQLiteCache, RedisCache
+
+**Status**: ✅ IMPLEMENTED
+**Complexity**: Low (native LangChain support)
 **Impact**: Medium - Reduces costs for repeated queries
 
 ### 4. Enhanced Callbacks
