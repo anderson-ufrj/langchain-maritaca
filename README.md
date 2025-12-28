@@ -134,6 +134,25 @@ response = model_with_tools.invoke("Como está o tempo em São Paulo?")
 print(response)
 ```
 
+### With Caching
+
+```python
+from langchain_core.caches import InMemoryCache
+from langchain_core.globals import set_llm_cache
+from langchain_maritaca import ChatMaritaca
+
+# Enable caching globally
+set_llm_cache(InMemoryCache())
+
+model = ChatMaritaca(model="sabia-3.1")
+
+# First call - hits the API
+response1 = model.invoke("Qual é a capital do Brasil?")
+
+# Second call - uses cache (instant, no API cost!)
+response2 = model.invoke("Qual é a capital do Brasil?")
+```
+
 ## Why Maritaca AI?
 
 Maritaca AI models are specifically trained for Brazilian Portuguese, offering:
