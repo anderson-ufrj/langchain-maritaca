@@ -3,7 +3,7 @@
 Consolidated roadmap with detailed implementation steps for each planned feature.
 
 > **Last Updated:** December 2025
-> **Current Version:** v0.2.2
+> **Current Version:** v0.2.4
 
 ---
 
@@ -13,7 +13,7 @@ Consolidated roadmap with detailed implementation steps for each planned feature
 |---------|----------|------------|--------|
 | ~~Cache Integration~~ | High | Low | **IMPLEMENTED** |
 | ~~Configurable Retry Logic~~ | High | Low | **IMPLEMENTED** |
-| Enhanced Callbacks | Medium | Low | Planned |
+| ~~Enhanced Callbacks~~ | Medium | Low | **IMPLEMENTED** |
 | Token Counter | Medium | Medium | Planned |
 | Batch Optimization | Low | Medium | Planned |
 | Multimodal/Vision Support | Low | High | Blocked (API) |
@@ -83,47 +83,41 @@ model = ChatMaritaca(
 
 ## MEDIUM PRIORITY
 
-### 3. Enhanced Callbacks
+### 3. ~~Enhanced Callbacks~~ ✅ IMPLEMENTED
 
 **Goal:** Provide granular callbacks for observability (cost tracking, latency, token streaming).
 
-**Implementation Steps:**
+**Implemented Callbacks:**
+- `CostTrackingCallback` - Track token usage and estimate API costs
+- `LatencyTrackingCallback` - Measure response times with percentile statistics
+- `TokenStreamingCallback` - Monitor streaming token rates
+- `CombinedCallback` - Combined cost and latency tracking
 
-1. **Research LangChain callback system**
-   - Study `CallbackManagerForLLMRun`
-   - Identify available callback hooks
-   - Check what other integrations implement
+**Usage:**
+```python
+from langchain_maritaca import ChatMaritaca, CostTrackingCallback, LatencyTrackingCallback
 
-2. **Implement cost tracking callback**
-   - Calculate cost based on token usage and Maritaca pricing
-   - Emit cost data via callbacks
-   - Create `MaritacaCostCallback` example class
+cost_cb = CostTrackingCallback()
+latency_cb = LatencyTrackingCallback()
 
-3. **Implement latency monitoring**
-   - Track time for each API call
-   - Emit latency metrics via callbacks
-   - Support percentile calculations
+model = ChatMaritaca(callbacks=[cost_cb, latency_cb])
+model.invoke("Hello!")
 
-4. **Enhance streaming callbacks**
-   - Ensure token-by-token streaming emits proper callbacks
-   - Add timing information to stream chunks
+print(f"Cost: ${cost_cb.total_cost:.6f}")
+print(f"Tokens: {cost_cb.total_tokens}")
+print(f"Latency: {latency_cb.average_latency:.2f}s")
+print(f"P95: {latency_cb.p95_latency:.2f}s")
+```
 
-5. **Create callback examples**
-   - Cost tracking callback
-   - Latency logging callback
-   - Prometheus metrics callback
+**Features:**
+- Cost tracking based on Maritaca AI pricing (sabia-3.1, sabiazinho-3.1)
+- Latency statistics with P50, P95, P99 percentiles
+- Token streaming rate calculation
+- Easy integration with monitoring tools (Prometheus, logging)
 
-6. **Add documentation**
-   - Callback usage guide
-   - Integration with monitoring tools
-
-**Files to modify:**
-- `langchain_maritaca/chat_models.py`
-- `langchain_maritaca/callbacks.py` (new, optional)
-- `tests/unit_tests/test_callbacks.py` (new)
-- `docs/en/guide/callbacks.md` (new)
-- `docs/pt-br/guide/callbacks.md` (new)
-- `docs/en/examples/monitoring.md` (new)
+**Status:** ✅ IMPLEMENTED
+**Complexity:** Low
+**Impact:** Medium - Better observability
 
 ---
 
@@ -257,6 +251,7 @@ model = ChatMaritaca(
 | Bilingual Documentation | v0.2.3 | Dec 2025 |
 | Configurable Retry Logic | v0.2.3 | Dec 2025 |
 | Cache Integration | v0.2.4 | Dec 2025 |
+| Enhanced Callbacks | v0.2.4 | Dec 2025 |
 
 ---
 
