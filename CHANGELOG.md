@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2025-12-28
+
+### Added
+
+- **Configurable Retry Logic**: Fine-grained control over retry behavior
+  - `retry_if_rate_limited`: Enable/disable auto-retry on HTTP 429 (default: `True`)
+  - `retry_delay`: Initial delay between retries in seconds (default: `1.0`)
+  - `retry_max_delay`: Maximum delay cap in seconds (default: `60.0`)
+  - `retry_multiplier`: Exponential backoff multiplier (default: `2.0`)
+  - Validation for all retry parameters
+  - Works for both sync and async requests
+- **Codecov Badge**: Test coverage badge in README
+- **Portuguese README**: Complete translation of README to Brazilian Portuguese (`README.pt-br.md`)
+- **Consolidated Roadmap**: Detailed implementation steps in `docs/planning/ROADMAP.md`
+
+### Changed
+
+- Improved retry logic with exponential backoff using configurable parameters
+- Rate limit retry can now be disabled with `retry_if_rate_limited=False`
+
 ## [0.2.2] - 2025-12-22
 
 ### Added
@@ -84,7 +104,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Rate Limiting**: Graceful handling of API rate limits
 - **Tracing**: Built-in LangSmith integration for observability
 
-[Unreleased]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.1.1...v0.2.0
