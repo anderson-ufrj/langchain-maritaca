@@ -542,3 +542,153 @@ class TestStructuredOutput:
                 Person,
                 method="invalid_method",  # type: ignore[arg-type]
             )
+
+
+class TestRetryConfiguration:
+    """Test retry configuration and logic."""
+
+    def test_default_retry_parameters(self) -> None:
+        """Test default retry parameter values."""
+        model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
+        assert model.max_retries == 2
+        assert model.retry_if_rate_limited is True
+        assert model.retry_delay == 1.0
+        assert model.retry_max_delay == 60.0
+        assert model.retry_multiplier == 2.0
+
+    def test_custom_retry_parameters(self) -> None:
+        """Test initialization with custom retry parameters."""
+        model = ChatMaritaca(
+            api_key="test-key",  # type: ignore[arg-type]
+            max_retries=5,
+            retry_if_rate_limited=False,
+            retry_delay=0.5,
+            retry_max_delay=30.0,
+            retry_multiplier=3.0,
+        )
+        assert model.max_retries == 5
+        assert model.retry_if_rate_limited is False
+        assert model.retry_delay == 0.5
+        assert model.retry_max_delay == 30.0
+        assert model.retry_multiplier == 3.0
+
+    def test_retry_delay_negative_raises(self) -> None:
+        """Test that negative retry_delay raises ValueError."""
+        with pytest.raises(ValueError, match="retry_delay must be non-negative"):
+            ChatMaritaca(
+                api_key="test-key",  # type: ignore[arg-type]
+                retry_delay=-1.0,
+            )
+
+    def test_retry_max_delay_less_than_delay_raises(self) -> None:
+        """Test that retry_max_delay < retry_delay raises ValueError."""
+        with pytest.raises(
+            ValueError,
+            match="retry_max_delay must be greater than or equal to retry_delay",
+        ):
+            ChatMaritaca(
+                api_key="test-key",  # type: ignore[arg-type]
+                retry_delay=10.0,
+                retry_max_delay=5.0,
+            )
+
+    def test_retry_multiplier_less_than_one_raises(self) -> None:
+        """Test that retry_multiplier < 1.0 raises ValueError."""
+        with pytest.raises(ValueError, match=r"retry_multiplier must be at least 1\.0"):
+            ChatMaritaca(
+                api_key="test-key",  # type: ignore[arg-type]
+                retry_multiplier=0.5,
+            )
+
+    def test_calculate_retry_delay(self) -> None:
+        """Test exponential backoff delay calculation."""
+        model = ChatMaritaca(
+            api_key="test-key",  # type: ignore[arg-type]
+            retry_delay=1.0,
+            retry_max_delay=60.0,
+            retry_multiplier=2.0,
+        )
+        # attempt 0: 1.0 * 2^0 = 1.0
+        assert model._calculate_retry_delay(0) == 1.0
+        # attempt 1: 1.0 * 2^1 = 2.0
+        assert model._calculate_retry_delay(1) == 2.0
+        # attempt 2: 1.0 * 2^2 = 4.0
+        assert model._calculate_retry_delay(2) == 4.0
+        # attempt 3: 1.0 * 2^3 = 8.0
+        assert model._calculate_retry_delay(3) == 8.0
+
+    def test_calculate_retry_delay_capped_at_max(self) -> None:
+        """Test that retry delay is capped at retry_max_delay."""
+        model = ChatMaritaca(
+            api_key="test-key",  # type: ignore[arg-type]
+            retry_delay=10.0,
+            retry_max_delay=30.0,
+            retry_multiplier=2.0,
+        )
+        # attempt 0: 10.0 * 2^0 = 10.0
+        assert model._calculate_retry_delay(0) == 10.0
+        # attempt 1: 10.0 * 2^1 = 20.0
+        assert model._calculate_retry_delay(1) == 20.0
+        # attempt 2: 10.0 * 2^2 = 40.0 -> capped at 30.0
+        assert model._calculate_retry_delay(2) == 30.0
+        # attempt 3: 10.0 * 2^3 = 80.0 -> capped at 30.0
+        assert model._calculate_retry_delay(3) == 30.0
+
+    def test_retry_disabled_for_rate_limit(self) -> None:
+        """Test that rate limit retry can be disabled."""
+        import httpx
+
+        model = ChatMaritaca(
+            api_key="test-key",  # type: ignore[arg-type]
+            retry_if_rate_limited=False,
+            max_retries=3,
+        )
+
+        # Create a mock response that returns 429 Too Many Requests
+        mock_response = MagicMock()
+        mock_response.status_code = 429
+        mock_response.headers = {"Retry-After": "1"}
+
+        mock_client = MagicMock()
+        mock_client.post.side_effect = httpx.HTTPStatusError(
+            "Rate limited",
+            request=MagicMock(),
+            response=mock_response,
+        )
+        model.client = mock_client
+
+        # Should raise immediately without retrying
+        with pytest.raises(httpx.HTTPStatusError):
+            model._make_request([], {})
+
+        # Should only be called once (no retries)
+        assert mock_client.post.call_count == 1
+
+    @patch("langchain_maritaca.chat_models.time.sleep")
+    def test_retry_with_exponential_backoff_on_timeout(
+        self, mock_sleep: MagicMock
+    ) -> None:
+        """Test exponential backoff on timeout errors."""
+        import httpx
+
+        model = ChatMaritaca(
+            api_key="test-key",  # type: ignore[arg-type]
+            max_retries=2,
+            retry_delay=1.0,
+            retry_multiplier=2.0,
+        )
+
+        mock_client = MagicMock()
+        mock_client.post.side_effect = httpx.TimeoutException("Timeout")
+        model.client = mock_client
+
+        with pytest.raises(httpx.TimeoutException):
+            model._make_request([], {})
+
+        # Should have retried max_retries times
+        assert mock_client.post.call_count == 3  # 1 initial + 2 retries
+
+        # Check exponential backoff delays
+        assert mock_sleep.call_count == 2
+        mock_sleep.assert_any_call(1.0)  # First retry: 1.0 * 2^0
+        mock_sleep.assert_any_call(2.0)  # Second retry: 1.0 * 2^1

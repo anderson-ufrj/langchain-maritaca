@@ -204,6 +204,10 @@ Classe principal para interagir com os modelos da Maritaca AI.
 | `base_url` | str | `"https://chat.maritaca.ai/api"` | URL base da API |
 | `timeout` | float | `60.0` | Timeout da requisição em segundos |
 | `max_retries` | int | `2` | Máximo de tentativas de retry |
+| `retry_if_rate_limited` | bool | `True` | Auto-retry em rate limit (HTTP 429) |
+| `retry_delay` | float | `1.0` | Delay inicial entre retries (segundos) |
+| `retry_max_delay` | float | `60.0` | Delay máximo entre retries (segundos) |
+| `retry_multiplier` | float | `2.0` | Multiplicador para backoff exponencial |
 | `streaming` | bool | `False` | Habilitar respostas em streaming |
 
 ### DeepInfraEmbeddings

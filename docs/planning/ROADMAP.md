@@ -12,7 +12,7 @@ Consolidated roadmap with detailed implementation steps for each planned feature
 | Feature | Priority | Complexity | Status |
 |---------|----------|------------|--------|
 | Cache Integration | High | Low | Planned |
-| Configurable Retry Logic | High | Low | Planned |
+| ~~Configurable Retry Logic~~ | High | Low | **IMPLEMENTED** |
 | Enhanced Callbacks | Medium | Low | Planned |
 | Token Counter | Medium | Medium | Planned |
 | Batch Optimization | Low | Medium | Planned |
@@ -66,51 +66,31 @@ Consolidated roadmap with detailed implementation steps for each planned feature
 
 ---
 
-### 2. Configurable Retry Logic
+### 2. ~~Configurable Retry Logic~~ ✅ IMPLEMENTED
 
 **Goal:** Expose retry parameters for production resilience customization.
 
-**Implementation Steps:**
+**Implemented Parameters:**
+```python
+model = ChatMaritaca(
+    retry_if_rate_limited=True,   # Auto-retry on HTTP 429
+    retry_delay=1.0,              # Initial delay (seconds)
+    retry_max_delay=60.0,         # Maximum delay (seconds)
+    retry_multiplier=2.0,         # Exponential backoff multiplier
+    max_retries=2,                # Maximum retry attempts
+)
+```
 
-1. **Identify current retry implementation**
-   - File: `langchain_maritaca/chat_models.py`
-   - Find retry logic in `_generate` and `_agenerate` methods
-   - Document current hardcoded values
+**Features:**
+- Exponential backoff with configurable multiplier
+- Delay capped at `retry_max_delay`
+- Rate limit retry can be disabled with `retry_if_rate_limited=False`
+- Validation for all retry parameters
+- Works for both sync and async requests
 
-2. **Add new parameters to ChatMaritaca**
-   ```python
-   retry_if_rate_limited: bool = True
-   retry_delay: float = 1.0
-   retry_max_delay: float = 60.0
-   retry_multiplier: float = 2.0
-   max_retries: int = 3  # already exists
-   ```
-
-3. **Update retry logic**
-   - Replace hardcoded values with instance attributes
-   - Ensure exponential backoff respects new parameters
-   - Handle edge cases (retry_delay > retry_max_delay)
-
-4. **Add validation**
-   - Validate retry_delay >= 0
-   - Validate retry_max_delay >= retry_delay
-   - Validate retry_multiplier >= 1.0
-
-5. **Add unit tests**
-   - Test retry with different configurations
-   - Test retry disabled (retry_if_rate_limited=False)
-   - Test exponential backoff calculation
-
-6. **Update documentation**
-   - Add retry configuration to API reference
-   - Add production configuration guide
-
-**Files to modify:**
-- `langchain_maritaca/chat_models.py`
-- `tests/unit_tests/test_chat_models.py`
-- `docs/en/api/chat-maritaca.md`
-- `docs/pt-br/api/chat-maritaca.md`
-- `README.md` and `README.pt-br.md` (API Reference table)
+**Status:** ✅ IMPLEMENTED
+**Complexity:** Low
+**Impact:** Medium - Better resilience in production
 
 ---
 
@@ -288,6 +268,7 @@ Consolidated roadmap with detailed implementation steps for each planned feature
 | Tool Calling / Function Calling | v0.2.0 | Dec 2025 |
 | Coverage Badge | v0.2.3 | Dec 2025 |
 | Bilingual Documentation | v0.2.3 | Dec 2025 |
+| Configurable Retry Logic | v0.2.3 | Dec 2025 |
 
 ---
 

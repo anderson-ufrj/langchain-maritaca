@@ -82,19 +82,27 @@ More granular callbacks for token-by-token streaming, cost tracking, and latency
 **Complexity**: Low
 **Impact**: Medium - Better observability
 
-### 5. Configurable Retry Logic
-Expose retry parameters for more control over error handling.
+### 5. ~~Configurable Retry Logic~~ ✅ IMPLEMENTED
+~~Expose retry parameters for more control over error handling.~~
 
 ```python
 model = ChatMaritaca(
-    retry_if_rate_limited=True,
-    retry_delay=1.0,
-    retry_max_delay=60.0,
-    retry_multiplier=2.0,
+    retry_if_rate_limited=True,   # Auto-retry on HTTP 429
+    retry_delay=1.0,              # Initial delay (seconds)
+    retry_max_delay=60.0,         # Maximum delay (seconds)
+    retry_multiplier=2.0,         # Exponential backoff multiplier
+    max_retries=2,                # Maximum retry attempts
 )
 ```
 
-**Status**: Planned
+**Features**:
+- Exponential backoff with configurable multiplier
+- Delay capped at `retry_max_delay`
+- Rate limit retry can be disabled with `retry_if_rate_limited=False`
+- Validation for all retry parameters
+- Works for both sync and async requests
+
+**Status**: ✅ IMPLEMENTED
 **Complexity**: Low
 **Impact**: Medium - Better resilience in production
 

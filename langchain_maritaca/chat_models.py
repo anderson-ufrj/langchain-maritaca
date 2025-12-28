@@ -186,6 +186,18 @@ class ChatMaritaca(BaseChatModel):
     max_retries: int = 2
     """Maximum number of retries."""
 
+    retry_if_rate_limited: bool = True
+    """Whether to automatically retry when rate limited (HTTP 429)."""
+
+    retry_delay: float = 1.0
+    """Initial delay in seconds between retries for non-rate-limit errors."""
+
+    retry_max_delay: float = 60.0
+    """Maximum delay in seconds between retries."""
+
+    retry_multiplier: float = 2.0
+    """Multiplier for exponential backoff between retries."""
+
     streaming: bool = False
     """Whether to stream results."""
 
@@ -210,6 +222,17 @@ class ChatMaritaca(BaseChatModel):
             raise ValueError(msg)
         if self.n > 1 and self.streaming:
             msg = "n must be 1 when streaming."
+            raise ValueError(msg)
+
+        # Validate retry parameters
+        if self.retry_delay < 0:
+            msg = "retry_delay must be non-negative."
+            raise ValueError(msg)
+        if self.retry_max_delay < self.retry_delay:
+            msg = "retry_max_delay must be greater than or equal to retry_delay."
+            raise ValueError(msg)
+        if self.retry_multiplier < 1.0:
+            msg = "retry_multiplier must be at least 1.0."
             raise ValueError(msg)
 
         # Ensure temperature is not exactly 0 (causes issues with some APIs)
@@ -602,6 +625,18 @@ class ChatMaritaca(BaseChatModel):
                     except json.JSONDecodeError:
                         continue
 
+    def _calculate_retry_delay(self, attempt: int) -> float:
+        """Calculate delay for retry with exponential backoff.
+
+        Args:
+            attempt: The current attempt number (0-indexed).
+
+        Returns:
+            Delay in seconds, capped at retry_max_delay.
+        """
+        delay = self.retry_delay * (self.retry_multiplier**attempt)
+        return min(delay, self.retry_max_delay)
+
     def _make_request(
         self, messages: list[dict[str, Any]], params: dict[str, Any]
     ) -> dict[str, Any]:
@@ -616,13 +651,18 @@ class ChatMaritaca(BaseChatModel):
                 return response.json()
             except httpx.HTTPStatusError as e:
                 is_rate_limited = e.response.status_code == HTTP_TOO_MANY_REQUESTS
-                if is_rate_limited and attempt < self.max_retries:
-                    retry_after = int(e.response.headers.get("Retry-After", 60))
+                can_retry = attempt < self.max_retries
+                if is_rate_limited and self.retry_if_rate_limited and can_retry:
+                    retry_after = int(
+                        e.response.headers.get("Retry-After", self.retry_max_delay)
+                    )
                     time.sleep(retry_after)
                     continue
                 raise
             except httpx.TimeoutException:
                 if attempt < self.max_retries:
+                    delay = self._calculate_retry_delay(attempt)
+                    time.sleep(delay)
                     continue
                 raise
         msg = f"Failed after {self.max_retries + 1} attempts"
@@ -642,13 +682,18 @@ class ChatMaritaca(BaseChatModel):
                 return response.json()
             except httpx.HTTPStatusError as e:
                 is_rate_limited = e.response.status_code == HTTP_TOO_MANY_REQUESTS
-                if is_rate_limited and attempt < self.max_retries:
-                    retry_after = int(e.response.headers.get("Retry-After", 60))
+                can_retry = attempt < self.max_retries
+                if is_rate_limited and self.retry_if_rate_limited and can_retry:
+                    retry_after = int(
+                        e.response.headers.get("Retry-After", self.retry_max_delay)
+                    )
                     await asyncio.sleep(retry_after)
                     continue
                 raise
             except httpx.TimeoutException:
                 if attempt < self.max_retries:
+                    delay = self._calculate_retry_delay(attempt)
+                    await asyncio.sleep(delay)
                     continue
                 raise
         msg = f"Failed after {self.max_retries + 1} attempts"
