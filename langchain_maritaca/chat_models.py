@@ -766,13 +766,18 @@ class ChatMaritaca(BaseChatModel):
             # This is a rough approximation
             return max(1, len(text) // 4)
 
-    def get_num_tokens_from_messages(self, messages: list[BaseMessage]) -> int:
+    def get_num_tokens_from_messages(
+        self,
+        messages: list[BaseMessage],
+        tools: Sequence[Any] | None = None,
+    ) -> int:
         """Get the estimated number of tokens in a list of messages.
 
         Accounts for message formatting overhead (role prefixes, separators).
 
         Args:
             messages: List of LangChain messages.
+            tools: Optional list of tools (not used, for signature compatibility).
 
         Returns:
             Estimated total number of tokens.
@@ -842,7 +847,7 @@ class ChatMaritaca(BaseChatModel):
         self,
         messages: list[BaseMessage],
         max_output_tokens: int = 1000,
-    ) -> dict[str, float]:
+    ) -> dict[str, Any]:
         """Estimate the cost of a request before making it.
 
         Uses token counting and Maritaca AI pricing to estimate costs.
