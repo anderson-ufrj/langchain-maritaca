@@ -209,6 +209,26 @@ print(f"Latência média: {latency_cb.average_latency:.2f}s")
 print(f"P95: {latency_cb.p95_latency:.2f}s")
 ```
 
+### Contagem de Tokens e Estimativa de Custos
+
+```python
+from langchain_maritaca import ChatMaritaca
+from langchain_core.messages import HumanMessage
+
+model = ChatMaritaca(model="sabia-3.1")
+
+# Contar tokens no texto
+tokens = model.get_num_tokens("Olá, como você está?")
+print(f"Tokens: {tokens}")
+
+# Estimar custo antes de fazer uma requisição
+messages = [HumanMessage(content="Me conte sobre o Brasil")]
+estimate = model.estimate_cost(messages, max_output_tokens=1000)
+print(f"Custo estimado: ${estimate['total_cost']:.6f}")
+```
+
+> **Dica**: Instale com `pip install langchain-maritaca[tokenizer]` para contagem precisa de tokens usando tiktoken.
+
 ## Por que Maritaca AI?
 
 Os modelos da Maritaca AI são especificamente treinados para Português Brasileiro, oferecendo:
