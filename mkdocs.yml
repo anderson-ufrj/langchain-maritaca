@@ -67,6 +67,7 @@ plugins:
             Chamada de Ferramentas: Tool Calling
             Integração LCEL: LCEL Integration
             Cache: Caching
+            Callbacks: Callbacks
             Referência da API: API Reference
             Exemplos: Examples
             Chatbot: Chatbot
@@ -127,6 +128,7 @@ nav:
     - Chamada de Ferramentas: guide/tool-calling.md
     - Integração LCEL: guide/lcel.md
     - Cache: guide/caching.md
+    - Callbacks: guide/callbacks.md
   - Referência da API:
     - ChatMaritaca: api/chat-maritaca.md
   - Exemplos:
