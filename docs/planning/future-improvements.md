@@ -98,10 +98,13 @@ model = ChatMaritaca(
 **Complexity**: Low
 **Impact**: Medium - Better resilience in production
 
-### 6. Coverage Badge
-Add Codecov integration to show test coverage in README.
+### 6. ~~Coverage Badge~~ ✅ IMPLEMENTED
+~~Add Codecov integration to show test coverage in README.~~
 
-**Status**: Planned
+Added Codecov badge to README.md. The Codecov integration was already configured
+in CI workflow, now the badge is visible to users.
+
+**Status**: ✅ IMPLEMENTED
 **Complexity**: Low
 **Impact**: Low - Documentation improvement
 
