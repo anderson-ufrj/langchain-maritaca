@@ -187,6 +187,28 @@ response1 = model.invoke("Qual é a capital do Brasil?")
 response2 = model.invoke("Qual é a capital do Brasil?")
 ```
 
+### Com Callbacks para Observabilidade
+
+```python
+from langchain_maritaca import ChatMaritaca, CostTrackingCallback, LatencyTrackingCallback
+
+# Criar callbacks para monitoramento
+cost_cb = CostTrackingCallback()
+latency_cb = LatencyTrackingCallback()
+
+model = ChatMaritaca(callbacks=[cost_cb, latency_cb])
+
+# Fazer algumas chamadas
+model.invoke("Olá!")
+model.invoke("Como você está?")
+
+# Verificar métricas
+print(f"Custo total: ${cost_cb.total_cost:.6f}")
+print(f"Tokens totais: {cost_cb.total_tokens}")
+print(f"Latência média: {latency_cb.average_latency:.2f}s")
+print(f"P95: {latency_cb.p95_latency:.2f}s")
+```
+
 ## Por que Maritaca AI?
 
 Os modelos da Maritaca AI são especificamente treinados para Português Brasileiro, oferecendo:
