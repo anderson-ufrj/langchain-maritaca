@@ -175,6 +175,26 @@ print(f"Average latency: {latency_cb.average_latency:.2f}s")
 print(f"P95 latency: {latency_cb.p95_latency:.2f}s")
 ```
 
+### Token Counting & Cost Estimation
+
+```python
+from langchain_maritaca import ChatMaritaca
+from langchain_core.messages import HumanMessage
+
+model = ChatMaritaca(model="sabia-3.1")
+
+# Count tokens in text
+tokens = model.get_num_tokens("Olá, como você está?")
+print(f"Tokens: {tokens}")
+
+# Estimate cost before making a request
+messages = [HumanMessage(content="Tell me about Brazil")]
+estimate = model.estimate_cost(messages, max_output_tokens=1000)
+print(f"Estimated cost: ${estimate['total_cost']:.6f}")
+```
+
+> **Tip**: Install with `pip install langchain-maritaca[tokenizer]` for accurate token counting using tiktoken.
+
 ## Why Maritaca AI?
 
 Maritaca AI models are specifically trained for Brazilian Portuguese, offering:
