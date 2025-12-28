@@ -692,3 +692,154 @@ class TestRetryConfiguration:
         assert mock_sleep.call_count == 2
         mock_sleep.assert_any_call(1.0)  # First retry: 1.0 * 2^0
         mock_sleep.assert_any_call(2.0)  # Second retry: 1.0 * 2^1
+
+
+class TestCaching:
+    """Test LangChain caching integration."""
+
+    @pytest.fixture
+    def mock_response(self) -> dict[str, Any]:
+        """Create a mock API response."""
+        return {
+            "id": "chatcmpl-cache-test",
+            "object": "chat.completion",
+            "created": 1234567890,
+            "model": "sabia-3.1",
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": "Cached response from Maritaca.",
+                    },
+                    "finish_reason": "stop",
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 10,
+                "completion_tokens": 8,
+                "total_tokens": 18,
+            },
+        }
+
+    def test_cache_hit_avoids_api_call(self, mock_response: dict[str, Any]) -> None:
+        """Test that cached responses avoid API calls."""
+        from langchain_core.caches import InMemoryCache
+        from langchain_core.globals import set_llm_cache
+
+        # Setup cache
+        cache = InMemoryCache()
+        set_llm_cache(cache)
+
+        try:
+            model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
+
+            # Mock the HTTP client
+            mock_http_response = MagicMock()
+            mock_http_response.json.return_value = mock_response
+            mock_http_response.raise_for_status = MagicMock()
+            model.client = MagicMock()
+            model.client.post.return_value = mock_http_response
+
+            # First call - should hit API
+            result1 = model.invoke("What is caching?")
+            assert result1.content == "Cached response from Maritaca."
+            assert model.client.post.call_count == 1
+
+            # Second call with same input - should use cache
+            result2 = model.invoke("What is caching?")
+            assert result2.content == "Cached response from Maritaca."
+            assert model.client.post.call_count == 1  # Still 1, cache hit!
+
+        finally:
+            # Clean up global cache
+            set_llm_cache(None)
+
+    def test_cache_miss_on_different_input(self, mock_response: dict[str, Any]) -> None:
+        """Test that different inputs result in cache miss."""
+        from langchain_core.caches import InMemoryCache
+        from langchain_core.globals import set_llm_cache
+
+        cache = InMemoryCache()
+        set_llm_cache(cache)
+
+        try:
+            model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
+
+            mock_http_response = MagicMock()
+            mock_http_response.json.return_value = mock_response
+            mock_http_response.raise_for_status = MagicMock()
+            model.client = MagicMock()
+            model.client.post.return_value = mock_http_response
+
+            # First call
+            model.invoke("Question 1")
+            assert model.client.post.call_count == 1
+
+            # Second call with different input - should hit API again
+            model.invoke("Question 2")
+            assert model.client.post.call_count == 2  # Cache miss
+
+        finally:
+            set_llm_cache(None)
+
+    def test_cache_respects_model_parameters(
+        self, mock_response: dict[str, Any]
+    ) -> None:
+        """Test that cache keys include model parameters."""
+        from langchain_core.caches import InMemoryCache
+        from langchain_core.globals import set_llm_cache
+
+        cache = InMemoryCache()
+        set_llm_cache(cache)
+
+        try:
+            # Two models with different temperatures
+            model1 = ChatMaritaca(
+                api_key="test-key",
+                temperature=0.5,  # type: ignore[arg-type]
+            )
+            model2 = ChatMaritaca(
+                api_key="test-key",
+                temperature=0.9,  # type: ignore[arg-type]
+            )
+
+            for model in [model1, model2]:
+                mock_http_response = MagicMock()
+                mock_http_response.json.return_value = mock_response
+                mock_http_response.raise_for_status = MagicMock()
+                model.client = MagicMock()
+                model.client.post.return_value = mock_http_response
+
+            # Call with model1
+            model1.invoke("Same question")
+            assert model1.client.post.call_count == 1
+
+            # Call with model2 (different temperature) - should cache miss
+            model2.invoke("Same question")
+            assert model2.client.post.call_count == 1  # Different cache key
+
+        finally:
+            set_llm_cache(None)
+
+    def test_no_cache_when_not_set(self, mock_response: dict[str, Any]) -> None:
+        """Test that no caching occurs when cache is not set."""
+        from langchain_core.globals import set_llm_cache
+
+        # Ensure no cache is set
+        set_llm_cache(None)
+
+        model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
+
+        mock_http_response = MagicMock()
+        mock_http_response.json.return_value = mock_response
+        mock_http_response.raise_for_status = MagicMock()
+        model.client = MagicMock()
+        model.client.post.return_value = mock_http_response
+
+        # Both calls should hit API
+        model.invoke("Hello")
+        assert model.client.post.call_count == 1
+
+        model.invoke("Hello")
+        assert model.client.post.call_count == 2  # No cache, hits API again
