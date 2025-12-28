@@ -84,10 +84,25 @@ response2 = model.invoke("Hello")  # Cache hit (instant!)
 **Complexity**: Low (native LangChain support)
 **Impact**: Medium - Reduces costs for repeated queries
 
-### 4. Enhanced Callbacks
-More granular callbacks for token-by-token streaming, cost tracking, and latency monitoring.
+### 4. ~~Enhanced Callbacks~~ ✅ IMPLEMENTED
+~~More granular callbacks for token-by-token streaming, cost tracking, and latency monitoring.~~
 
-**Status**: Planned
+Implemented callback handlers for observability:
+- `CostTrackingCallback` - Track token usage and estimate API costs
+- `LatencyTrackingCallback` - Measure response times with percentile statistics
+- `TokenStreamingCallback` - Monitor streaming token rates
+- `CombinedCallback` - Combined cost and latency tracking
+
+```python
+from langchain_maritaca import ChatMaritaca, CostTrackingCallback
+
+cost_cb = CostTrackingCallback()
+model = ChatMaritaca(callbacks=[cost_cb])
+model.invoke("Hello!")
+print(f"Cost: ${cost_cb.total_cost:.6f}")
+```
+
+**Status**: ✅ IMPLEMENTED
 **Complexity**: Low
 **Impact**: Medium - Better observability
 
