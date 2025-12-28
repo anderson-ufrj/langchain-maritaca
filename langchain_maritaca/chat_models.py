@@ -731,6 +731,171 @@ class ChatMaritaca(BaseChatModel):
 
         return ChatResult(generations=generations, llm_output=llm_output)
 
+    def get_num_tokens(self, text: str) -> int:
+        """Get the estimated number of tokens in a text string.
+
+        Uses tiktoken if available, otherwise falls back to character-based
+        estimation (~4 characters per token).
+
+        Args:
+            text: The text to count tokens for.
+
+        Returns:
+            Estimated number of tokens.
+
+        Example:
+            .. code-block:: python
+
+                model = ChatMaritaca()
+                tokens = model.get_num_tokens("Olá, como você está?")
+                print(f"Estimated tokens: {tokens}")
+
+        Note:
+            This is an estimate. Actual token count may vary depending on
+            the model's tokenizer. For precise counts, use the API response.
+        """
+        try:
+            import tiktoken
+
+            # Use cl100k_base as approximation (GPT-4 tokenizer)
+            # Works reasonably well for Portuguese text
+            encoding = tiktoken.get_encoding("cl100k_base")
+            return len(encoding.encode(text))
+        except ImportError:
+            # Fallback: estimate ~4 characters per token
+            # This is a rough approximation
+            return max(1, len(text) // 4)
+
+    def get_num_tokens_from_messages(self, messages: list[BaseMessage]) -> int:
+        """Get the estimated number of tokens in a list of messages.
+
+        Accounts for message formatting overhead (role prefixes, separators).
+
+        Args:
+            messages: List of LangChain messages.
+
+        Returns:
+            Estimated total number of tokens.
+
+        Example:
+            .. code-block:: python
+
+                from langchain_core.messages import HumanMessage, SystemMessage
+
+                model = ChatMaritaca()
+                messages = [
+                    SystemMessage(content="You are a helpful assistant."),
+                    HumanMessage(content="What is the capital of Brazil?"),
+                ]
+                tokens = model.get_num_tokens_from_messages(messages)
+                print(f"Estimated tokens: {tokens}")
+
+        Note:
+            This is an estimate. Actual token count may vary.
+        """
+        total_tokens = 0
+
+        # Tokens per message overhead (role, separators, etc.)
+        # Based on OpenAI's token counting documentation
+        tokens_per_message = 4  # <|start|>role\ncontent<|end|>
+
+        for message in messages:
+            total_tokens += tokens_per_message
+
+            # Count content tokens
+            content = message.content
+            if isinstance(content, str):
+                total_tokens += self.get_num_tokens(content)
+            elif isinstance(content, list):
+                # Handle multi-part content
+                for part in content:
+                    if isinstance(part, str):
+                        total_tokens += self.get_num_tokens(part)
+                    elif isinstance(part, dict) and "text" in part:
+                        total_tokens += self.get_num_tokens(part["text"])
+
+            # Add role tokens
+            if isinstance(message, HumanMessage):
+                total_tokens += 1  # "user"
+            elif isinstance(message, AIMessage):
+                total_tokens += 1  # "assistant"
+                # Handle tool calls
+                if message.tool_calls:
+                    for tool_call in message.tool_calls:
+                        # Add tokens for tool call structure
+                        total_tokens += self.get_num_tokens(tool_call.get("name", ""))
+                        args_str = json.dumps(tool_call.get("args", {}))
+                        total_tokens += self.get_num_tokens(args_str)
+                        total_tokens += 10  # Overhead for tool call structure
+            elif isinstance(message, SystemMessage):
+                total_tokens += 1  # "system"
+            elif isinstance(message, ToolMessage):
+                total_tokens += 1  # "tool"
+                total_tokens += 2  # tool_call_id overhead
+
+        # Add tokens for message boundaries
+        total_tokens += 3  # <|start|>assistant
+
+        return total_tokens
+
+    def estimate_cost(
+        self,
+        messages: list[BaseMessage],
+        max_output_tokens: int = 1000,
+    ) -> dict[str, float]:
+        """Estimate the cost of a request before making it.
+
+        Uses token counting and Maritaca AI pricing to estimate costs.
+
+        Args:
+            messages: List of input messages.
+            max_output_tokens: Expected maximum output tokens (default: 1000).
+
+        Returns:
+            Dictionary with cost estimates:
+                - input_tokens: Estimated input token count
+                - output_tokens: Expected output tokens
+                - input_cost: Estimated input cost in USD
+                - output_cost: Estimated output cost in USD
+                - total_cost: Total estimated cost in USD
+
+        Example:
+            .. code-block:: python
+
+                model = ChatMaritaca(model="sabia-3.1")
+                messages = [HumanMessage(content="Tell me a long story")]
+
+                estimate = model.estimate_cost(messages, max_output_tokens=2000)
+                print(f"Estimated cost: ${estimate['total_cost']:.6f}")
+
+        Note:
+            Prices are estimates based on public pricing and may change.
+            Check https://www.maritaca.ai/ for current pricing.
+        """
+        # Maritaca AI pricing (USD per 1M tokens)
+        pricing = {
+            "sabia-3.1": {"input": 0.50, "output": 1.50},
+            "sabiazinho-3.1": {"input": 0.10, "output": 0.30},
+            "default": {"input": 0.50, "output": 1.50},
+        }
+
+        model_pricing = pricing.get(self.model_name, pricing["default"])
+
+        input_tokens = self.get_num_tokens_from_messages(messages)
+        output_tokens = max_output_tokens
+
+        input_cost = (input_tokens / 1_000_000) * model_pricing["input"]
+        output_cost = (output_tokens / 1_000_000) * model_pricing["output"]
+
+        return {
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "input_cost": input_cost,
+            "output_cost": output_cost,
+            "total_cost": input_cost + output_cost,
+            "model": self.model_name,
+        }
+
 
 def _convert_message_to_dict(message: BaseMessage) -> dict[str, Any]:
     """Convert a LangChain message to Maritaca format.
