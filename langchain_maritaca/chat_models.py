@@ -72,6 +72,28 @@ DEFAULT_CONTEXT_LIMIT = 32768
 # Warning threshold (percentage of context used)
 CONTEXT_WARNING_THRESHOLD = 0.9  # Warn at 90% usage
 
+# Model specifications for selection helper
+MODEL_SPECS: dict[str, dict[str, Any]] = {
+    "sabia-3.1": {
+        "context_limit": 32768,
+        "input_cost_per_1m": 0.50,
+        "output_cost_per_1m": 1.50,
+        "complexity": "high",
+        "speed": "medium",
+        "capabilities": ["complex_reasoning", "long_context", "tool_calling"],
+        "description": "Most capable model, best for complex tasks",
+    },
+    "sabiazinho-3.1": {
+        "context_limit": 8192,
+        "input_cost_per_1m": 0.10,
+        "output_cost_per_1m": 0.30,
+        "complexity": "medium",
+        "speed": "fast",
+        "capabilities": ["simple_tasks", "quick_responses", "tool_calling"],
+        "description": "Fast and economical, great for simple tasks",
+    },
+}
+
 
 class ChatMaritaca(BaseChatModel):
     r"""Maritaca AI Chat large language models API.
@@ -1114,6 +1136,178 @@ class ChatMaritaca(BaseChatModel):
             )
 
         return final_result
+
+    @classmethod
+    def list_available_models(cls) -> dict[str, dict[str, Any]]:
+        """List all available Maritaca models with their specifications.
+
+        Returns:
+            Dictionary mapping model names to their specifications including
+            context limits, pricing, and capabilities.
+
+        Example:
+            .. code-block:: python
+
+                models = ChatMaritaca.list_available_models()
+                for name, spec in models.items():
+                    print(f"{name}: {spec['description']}")
+                    print(f"  Context: {spec['context_limit']} tokens")
+                    print(f"  Cost: ${spec['input_cost_per_1m']}/1M input tokens")
+        """
+        return MODEL_SPECS.copy()
+
+    @classmethod
+    def recommend_model(
+        cls,
+        task_complexity: Literal["simple", "medium", "complex"] = "medium",
+        input_length: int | None = None,
+        priority: Literal["cost", "speed", "quality"] = "quality",
+    ) -> dict[str, Any]:
+        """Recommend the best model for a given task.
+
+        Analyzes task requirements and returns the most suitable model
+        along with reasoning for the recommendation.
+
+        Args:
+            task_complexity: Complexity of the task:
+                - "simple": Quick Q&A, simple text, summarization
+                - "medium": Standard conversations, moderate reasoning
+                - "complex": Complex reasoning, analysis, long-form generation
+            input_length: Estimated input token count. If provided, ensures
+                the recommended model's context window can accommodate it.
+            priority: Optimization priority:
+                - "cost": Minimize API costs
+                - "speed": Maximize response speed
+                - "quality": Maximize output quality
+
+        Returns:
+            Dictionary with recommendation:
+                - model: Recommended model name
+                - reason: Explanation for the recommendation
+                - specs: Model specifications
+                - alternatives: Other viable options
+
+        Example:
+            .. code-block:: python
+
+                # Get recommendation for a simple task
+                rec = ChatMaritaca.recommend_model(
+                    task_complexity="simple",
+                    priority="cost",
+                )
+                print(f"Recommended: {rec['model']}")
+                print(f"Reason: {rec['reason']}")
+
+                # Use the recommended model
+                model = ChatMaritaca(model=rec["model"])
+
+                # For long input that needs large context
+                rec = ChatMaritaca.recommend_model(
+                    task_complexity="complex",
+                    input_length=10000,
+                    priority="quality",
+                )
+        """
+        models = MODEL_SPECS.copy()
+        candidates: list[tuple[str, dict[str, Any], int]] = []
+
+        for model_name, specs in models.items():
+            score = 0
+            context_limit = specs["context_limit"]
+
+            # Filter by context limit if input_length is specified
+            if input_length is not None and input_length > context_limit * 0.8:
+                # Skip models that can't comfortably fit the input
+                continue
+
+            # Score based on task complexity
+            model_complexity = specs["complexity"]
+            if task_complexity == "simple":
+                if model_complexity == "medium":
+                    score += 10  # Prefer simpler model
+                else:
+                    score += 5
+            elif task_complexity == "medium":
+                score += 7
+            else:  # complex
+                if model_complexity == "high":
+                    score += 10  # Prefer more capable model
+                else:
+                    score += 3
+
+            # Score based on priority
+            if priority == "cost":
+                # Lower cost = higher score
+                cost = specs["input_cost_per_1m"] + specs["output_cost_per_1m"]
+                score += int(20 / (cost + 0.1))  # Normalize to reasonable range
+            elif priority == "speed":
+                if specs["speed"] == "fast":
+                    score += 15
+                else:
+                    score += 5
+            else:  # quality
+                if model_complexity == "high":
+                    score += 15
+                else:
+                    score += 5
+
+            candidates.append((model_name, specs, score))
+
+        if not candidates:
+            # No suitable model found, return the most capable one
+            default_model = "sabia-3.1"
+            return {
+                "model": default_model,
+                "reason": (
+                    "Input length requires maximum context window. "
+                    f"Consider using {default_model} with message truncation."
+                ),
+                "specs": models[default_model],
+                "alternatives": [],
+            }
+
+        # Sort by score descending
+        candidates.sort(key=lambda x: x[2], reverse=True)
+
+        best_model, best_specs, _best_score = candidates[0]
+
+        # Generate reason
+        reasons: list[str] = []
+        if task_complexity == "simple":
+            reasons.append("optimized for simple tasks")
+        elif task_complexity == "complex":
+            reasons.append("provides superior reasoning capabilities")
+        else:
+            reasons.append("balanced for general use")
+
+        if priority == "cost":
+            reasons.append("minimizes API costs")
+        elif priority == "speed":
+            reasons.append("maximizes response speed")
+        else:
+            reasons.append("prioritizes output quality")
+
+        if input_length is not None:
+            reasons.append(
+                f"accommodates {input_length} token input "
+                f"(limit: {best_specs['context_limit']})"
+            )
+
+        reason = (
+            f"{best_specs['description']}. Selected because it {', '.join(reasons)}."
+        )
+
+        # Get alternatives
+        alternatives = [
+            {"model": name, "specs": specs} for name, specs, score in candidates[1:]
+        ]
+
+        return {
+            "model": best_model,
+            "reason": reason,
+            "specs": best_specs,
+            "alternatives": alternatives,
+        }
 
 
 def _convert_message_to_dict(message: BaseMessage) -> dict[str, Any]:
