@@ -5,6 +5,34 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [0.2.4] - 2026-01-04
+
+### Adicionado
+
+- **Gerenciamento de Janela de Contexto**: Ferramentas para gerenciar limites de contexto
+  - `get_context_limit()`: Retorna o limite de contexto do modelo
+  - `check_context_usage()`: Verifica uso do contexto e emite avisos
+  - `truncate_messages()`: Trunca mensagens inteligentemente para caber no contexto
+  - Parâmetros `max_context_tokens`, `auto_truncate`, `context_warning_threshold`
+  - Constantes `MODEL_CONTEXT_LIMITS` com limites para cada modelo
+
+- **Seleção de Modelo**: Utilitários para escolher o modelo ideal
+  - `list_available_models()`: Lista todos os modelos com especificações
+  - `recommend_model()`: Recomendação inteligente baseada em complexidade e prioridade
+  - Constante `MODEL_SPECS` com detalhes de cada modelo (custo, velocidade, capacidades)
+
+- **Otimização de Batch**: Processamento eficiente de múltiplas requisições
+  - `abatch_with_concurrency()`: Processamento async com controle de concorrência
+  - `batch_with_progress()`: Processamento sync com callback de progresso
+  - `abatch_estimate_cost()`: Estimativa de custo antes da execução
+
+- **Documentação**: Guias completos em inglês e português
+  - Guia de gerenciamento de janela de contexto
+  - Guia de seleção de modelo
+  - Guia de processamento em lote
+
+- **Testes**: 50+ novos testes cobrindo todas as novas funcionalidades
+
 ## [0.2.0] - 2025-12-18
 
 ### Adicionado

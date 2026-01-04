@@ -4,4 +4,4 @@ Author: Anderson Henrique da Silva
 Location: Minas Gerais, Brasil
 """
 
-__version__ = "0.2.3"
+__version__ = "0.2.4"

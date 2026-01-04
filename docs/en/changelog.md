@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.4] - 2026-01-04
+
+### Added
+
+- **Context Window Management**: Tools for managing context limits
+  - `get_context_limit()`: Returns the model's context limit
+  - `check_context_usage()`: Checks context usage and emits warnings
+  - `truncate_messages()`: Intelligently truncates messages to fit context
+  - Parameters `max_context_tokens`, `auto_truncate`, `context_warning_threshold`
+  - `MODEL_CONTEXT_LIMITS` constant with limits for each model
+
+- **Model Selection**: Utilities for choosing the optimal model
+  - `list_available_models()`: Lists all models with specifications
+  - `recommend_model()`: Intelligent recommendation based on complexity and priority
+  - `MODEL_SPECS` constant with model details (cost, speed, capabilities)
+
+- **Batch Optimization**: Efficient processing of multiple requests
+  - `abatch_with_concurrency()`: Async processing with concurrency control
+  - `batch_with_progress()`: Sync processing with progress callback
+  - `abatch_estimate_cost()`: Cost estimation before execution
+
+- **Documentation**: Complete guides in English and Portuguese
+  - Context window management guide
+  - Model selection guide
+  - Batch processing guide
+
+- **Tests**: 50+ new tests covering all new functionality
+
 ## [0.2.0] - 2025-12-18
 
 ### Added

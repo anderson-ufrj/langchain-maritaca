@@ -2,8 +2,8 @@
 
 Consolidated roadmap with detailed implementation steps for each planned feature.
 
-> **Last Updated:** December 2025
-> **Current Version:** v0.2.3
+> **Last Updated:** January 2026
+> **Current Version:** v0.2.4
 
 ---
 
@@ -15,7 +15,9 @@ Consolidated roadmap with detailed implementation steps for each planned feature
 | ~~Configurable Retry Logic~~ | High | Low | **IMPLEMENTED** |
 | ~~Enhanced Callbacks~~ | Medium | Low | **IMPLEMENTED** |
 | ~~Token Counter~~ | Medium | Medium | **IMPLEMENTED** |
-| Batch Optimization | Low | Medium | Planned |
+| ~~Context Window Management~~ | Medium | Low | **IMPLEMENTED** |
+| ~~Model Selection Helper~~ | Low | Low | **IMPLEMENTED** |
+| ~~Batch Optimization~~ | Low | Medium | **IMPLEMENTED** |
 | Multimodal/Vision Support | Low | High | Blocked (API) |
 
 ---
@@ -158,42 +160,42 @@ print(f"Estimated cost: ${estimate['total_cost']:.6f}")
 
 ---
 
-## v0.2.4 PLANNING
+## v0.2.4 ✅ IMPLEMENTED
 
-The next version will focus on performance optimizations and advanced features.
+All planned features for v0.2.4 have been implemented.
 
-### Planned Features for v0.2.4
+### Implemented Features in v0.2.4
 
 | Feature | Priority | Complexity | Status |
 |---------|----------|------------|--------|
-| Batch Optimization | Medium | Medium | Planned |
-| Context Window Management | Medium | Low | Planned |
-| Model Selection Helper | Low | Low | Planned |
+| ~~Batch Optimization~~ | Medium | Medium | **IMPLEMENTED** |
+| ~~Context Window Management~~ | Medium | Low | **IMPLEMENTED** |
+| ~~Model Selection Helper~~ | Low | Low | **IMPLEMENTED** |
 
-### Context Window Management
+### Context Window Management ✅ IMPLEMENTED
 
-**Goal:** Add helpers for managing context window limits.
-
-**Planned Features:**
+**Implemented Features:**
 - `max_context_tokens` parameter to limit input tokens
-- Automatic message truncation when exceeding limits
-- Warning when approaching context limits
-- `truncate_messages()` utility method
+- `auto_truncate` parameter for automatic message truncation
+- `context_warning_threshold` parameter for warning customization
+- `get_context_limit()` method to get model's context limit
+- `check_context_usage()` method with automatic warnings
+- `truncate_messages()` method with intelligent truncation
+- `MODEL_CONTEXT_LIMITS` constant with per-model limits
 
-**Complexity:** Low
-**Impact:** Medium - Prevents context overflow errors
+### Model Selection Helper ✅ IMPLEMENTED
 
-### Model Selection Helper
+**Implemented Features:**
+- `list_available_models()` class method
+- `recommend_model()` class method with task complexity and priority options
+- `MODEL_SPECS` constant with detailed model specifications
 
-**Goal:** Utility to recommend the best model for a task.
+### Batch Optimization ✅ IMPLEMENTED
 
-**Planned Features:**
-- `recommend_model()` method based on task complexity
-- Cost vs performance trade-off analysis
-- Automatic model selection based on input size
-
-**Complexity:** Low
-**Impact:** Low - Developer convenience
+**Implemented Features:**
+- `abatch_with_concurrency()` for async batch processing with semaphore
+- `batch_with_progress()` for sync batch with progress callback
+- `abatch_estimate_cost()` for batch cost estimation
 
 ---
 

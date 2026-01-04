@@ -186,20 +186,19 @@ class TestBatchWithProgress:
     ) -> None:
         """Test that results are returned in original order."""
         model = ChatMaritaca(api_key="test")
-        call_count = 0
 
-        async def ordered_response(*args, **kwargs):
-            nonlocal call_count
-            call_count += 1
-            current = call_count
-            # Delay based on call order to mix up completion
-            await asyncio.sleep(0.01 * (3 - current))
+        async def ordered_response(messages, *args, **kwargs):
+            # Extract question number from input to ensure correct mapping
+            content = str(messages[0].content)
+            q_num = content.replace("Q", "")
+            # Delay inversely to mix up completion order
+            await asyncio.sleep(0.01 * (4 - int(q_num)))
             from langchain_core.messages import AIMessage
 
             return ChatResult(
                 generations=[
                     ChatGeneration(
-                        message=AIMessage(content=f"Response {current}"),
+                        message=AIMessage(content=f"Response {q_num}"),
                         generation_info={"finish_reason": "stop"},
                     )
                 ],
