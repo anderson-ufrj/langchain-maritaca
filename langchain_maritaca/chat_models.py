@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import time
 from collections.abc import AsyncIterator, Callable, Iterator, Mapping, Sequence
 from operator import itemgetter
@@ -56,6 +57,19 @@ from langchain_maritaca.version import __version__
 
 # HTTP status code for rate limiting
 HTTP_TOO_MANY_REQUESTS = 429
+
+# Logger for context window warnings
+logger = logging.getLogger(__name__)
+
+# Context window limits for Maritaca models (in tokens)
+MODEL_CONTEXT_LIMITS: dict[str, int] = {
+    "sabia-3.1": 32768,
+    "sabiazinho-3.1": 8192,
+}
+DEFAULT_CONTEXT_LIMIT = 32768
+
+# Warning threshold (percentage of context used)
+CONTEXT_WARNING_THRESHOLD = 0.9  # Warn at 90% usage
 
 
 class ChatMaritaca(BaseChatModel):
@@ -203,6 +217,23 @@ class ChatMaritaca(BaseChatModel):
 
     n: int = 1
     """Number of completions to generate."""
+
+    max_context_tokens: int | None = Field(default=None)
+    """Maximum context window tokens to use.
+
+    If set, messages will be automatically truncated to fit within this limit.
+    If not set, the model's default context limit is used.
+    """
+
+    auto_truncate: bool = False
+    """Whether to automatically truncate messages when exceeding context limit.
+
+    If True, older messages (except system messages) will be removed to fit
+    within the context window. If False, a warning is emitted instead.
+    """
+
+    context_warning_threshold: float = 0.9
+    """Emit warning when context usage exceeds this percentage (0.0 to 1.0)."""
 
     tools: list[dict[str, Any]] | None = Field(default=None, exclude=True)
     """List of tools (functions) available for the model to call."""
