@@ -1309,6 +1309,201 @@ class ChatMaritaca(BaseChatModel):
             "alternatives": alternatives,
         }
 
+    async def abatch_with_concurrency(
+        self,
+        inputs: list[list[BaseMessage]],
+        max_concurrency: int = 5,
+        *,
+        stop: list[str] | None = None,
+        return_exceptions: bool = False,
+        **kwargs: Any,
+    ) -> list[ChatResult | BaseException]:
+        """Process multiple message lists concurrently with rate limiting.
+
+        This method provides optimized batch processing by running multiple
+        requests in parallel, respecting a configurable concurrency limit.
+
+        Args:
+            inputs: List of message lists to process.
+            max_concurrency: Maximum number of concurrent requests.
+            stop: Optional stop sequences for all requests.
+            return_exceptions: If True, return exceptions instead of raising.
+            **kwargs: Additional arguments passed to _agenerate.
+
+        Returns:
+            List of ChatResult objects (or exceptions if return_exceptions=True).
+
+        Example:
+            .. code-block:: python
+
+                import asyncio
+                from langchain_maritaca import ChatMaritaca
+                from langchain_core.messages import HumanMessage
+
+                model = ChatMaritaca()
+
+                # Multiple inputs to process
+                inputs = [
+                    [HumanMessage(content="What is the capital of Brazil?")],
+                    [HumanMessage(content="What is the capital of Argentina?")],
+                    [HumanMessage(content="What is the capital of Chile?")],
+                ]
+
+                # Process with max 3 concurrent requests
+                results = asyncio.run(model.abatch_with_concurrency(inputs, max_concurrency=3))
+                for result in results:
+                    print(result.generations[0].text)
+        """
+        semaphore = asyncio.Semaphore(max_concurrency)
+
+        async def process_one(messages: list[BaseMessage]) -> ChatResult:
+            async with semaphore:
+                return await self._agenerate(messages, stop=stop, **kwargs)
+
+        tasks = [process_one(messages) for messages in inputs]
+
+        if return_exceptions:
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+        else:
+            results = await asyncio.gather(*tasks)
+
+        return results  # type: ignore[return-value]
+
+    def batch_with_progress(
+        self,
+        inputs: list[list[BaseMessage]],
+        max_concurrency: int = 5,
+        *,
+        stop: list[str] | None = None,
+        callback: Callable[[int, int, ChatResult | None], None] | None = None,
+        **kwargs: Any,
+    ) -> list[ChatResult]:
+        """Process multiple message lists with progress callback.
+
+        Synchronous wrapper around abatch_with_concurrency that provides
+        progress updates via callback.
+
+        Args:
+            inputs: List of message lists to process.
+            max_concurrency: Maximum number of concurrent requests.
+            stop: Optional stop sequences for all requests.
+            callback: Optional callback function called after each completion.
+                Signature: callback(completed_count, total_count, result)
+            **kwargs: Additional arguments passed to _agenerate.
+
+        Returns:
+            List of ChatResult objects.
+
+        Example:
+            .. code-block:: python
+
+                from langchain_maritaca import ChatMaritaca
+                from langchain_core.messages import HumanMessage
+
+                model = ChatMaritaca()
+
+
+                def on_progress(completed, total, result):
+                    print(f"Progress: {completed}/{total}")
+
+
+                inputs = [
+                    [HumanMessage(content="Question 1")],
+                    [HumanMessage(content="Question 2")],
+                    [HumanMessage(content="Question 3")],
+                ]
+
+                results = model.batch_with_progress(
+                    inputs,
+                    max_concurrency=2,
+                    callback=on_progress,
+                )
+        """
+
+        async def run_batch() -> list[ChatResult]:
+            semaphore = asyncio.Semaphore(max_concurrency)
+            total = len(inputs)
+            results: list[tuple[int, ChatResult]] = []
+
+            async def process_one(
+                idx: int, messages: list[BaseMessage]
+            ) -> tuple[int, ChatResult]:
+                async with semaphore:
+                    result = await self._agenerate(messages, stop=stop, **kwargs)
+                    return idx, result
+
+            tasks = [process_one(i, messages) for i, messages in enumerate(inputs)]
+
+            # Process as they complete
+            for completed, coro in enumerate(asyncio.as_completed(tasks), start=1):
+                idx, result = await coro
+                if callback:
+                    callback(completed, total, result)
+                results.append((idx, result))
+
+            # Sort by original order
+            results.sort(key=lambda x: x[0])
+            return [r for _, r in results]
+
+        return asyncio.run(run_batch())
+
+    async def abatch_estimate_cost(
+        self,
+        inputs: list[list[BaseMessage]],
+        max_output_tokens: int = 1000,
+    ) -> dict[str, Any]:
+        """Estimate total cost for a batch of requests before execution.
+
+        Args:
+            inputs: List of message lists to estimate.
+            max_output_tokens: Expected max output tokens per request.
+
+        Returns:
+            Dictionary with batch cost estimates:
+                - total_requests: Number of requests
+                - total_input_tokens: Estimated total input tokens
+                - total_output_tokens: Expected total output tokens
+                - total_input_cost: Estimated total input cost
+                - total_output_cost: Estimated total output cost
+                - total_cost: Total estimated cost
+
+        Example:
+            .. code-block:: python
+
+                inputs = [
+                    [HumanMessage(content="Question 1")],
+                    [HumanMessage(content="Question 2")],
+                ]
+                estimate = await model.abatch_estimate_cost(inputs)
+                print(f"Batch cost: ${estimate['total_cost']:.6f}")
+        """
+        total_input_tokens = 0
+        for messages in inputs:
+            total_input_tokens += self.get_num_tokens_from_messages(messages)
+
+        total_output_tokens = max_output_tokens * len(inputs)
+
+        # Get pricing
+        pricing = {
+            "sabia-3.1": {"input": 0.50, "output": 1.50},
+            "sabiazinho-3.1": {"input": 0.10, "output": 0.30},
+            "default": {"input": 0.50, "output": 1.50},
+        }
+        model_pricing = pricing.get(self.model_name, pricing["default"])
+
+        input_cost = (total_input_tokens / 1_000_000) * model_pricing["input"]
+        output_cost = (total_output_tokens / 1_000_000) * model_pricing["output"]
+
+        return {
+            "total_requests": len(inputs),
+            "total_input_tokens": total_input_tokens,
+            "total_output_tokens": total_output_tokens,
+            "total_input_cost": input_cost,
+            "total_output_cost": output_cost,
+            "total_cost": input_cost + output_cost,
+            "model": self.model_name,
+        }
+
 
 def _convert_message_to_dict(message: BaseMessage) -> dict[str, Any]:
     """Convert a LangChain message to Maritaca format.
