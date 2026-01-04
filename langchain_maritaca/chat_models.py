@@ -14,6 +14,7 @@ import asyncio
 import json
 import logging
 import time
+import warnings
 from collections.abc import AsyncIterator, Callable, Iterator, Mapping, Sequence
 from operator import itemgetter
 from typing import Any, Literal
@@ -931,6 +932,188 @@ class ChatMaritaca(BaseChatModel):
             "total_cost": input_cost + output_cost,
             "model": self.model_name,
         }
+
+    def get_context_limit(self) -> int:
+        """Get the context window limit for the current model.
+
+        Returns the custom limit if set via max_context_tokens, otherwise
+        returns the model's default context limit.
+
+        Returns:
+            Maximum number of tokens allowed in the context window.
+
+        Example:
+            .. code-block:: python
+
+                model = ChatMaritaca(model="sabia-3.1")
+                print(f"Context limit: {model.get_context_limit()}")  # 32768
+
+                model = ChatMaritaca(model="sabiazinho-3.1")
+                print(f"Context limit: {model.get_context_limit()}")  # 8192
+        """
+        if self.max_context_tokens is not None:
+            return self.max_context_tokens
+        return MODEL_CONTEXT_LIMITS.get(self.model_name, DEFAULT_CONTEXT_LIMIT)
+
+    def check_context_usage(
+        self,
+        messages: list[BaseMessage],
+        warn: bool = True,
+    ) -> dict[str, Any]:
+        """Check context window usage for a list of messages.
+
+        Args:
+            messages: List of messages to check.
+            warn: Whether to emit a warning if usage exceeds threshold.
+
+        Returns:
+            Dictionary with context usage information:
+                - tokens: Estimated token count
+                - limit: Context window limit
+                - usage_percent: Percentage of context used
+                - exceeds_limit: Whether context is exceeded
+                - exceeds_threshold: Whether warning threshold is exceeded
+
+        Example:
+            .. code-block:: python
+
+                model = ChatMaritaca()
+                messages = [HumanMessage(content="...long text...")]
+                usage = model.check_context_usage(messages)
+                print(f"Using {usage['usage_percent']:.1%} of context")
+        """
+        tokens = self.get_num_tokens_from_messages(messages)
+        limit = self.get_context_limit()
+        usage_percent = tokens / limit if limit > 0 else 0
+
+        exceeds_limit = tokens > limit
+        exceeds_threshold = usage_percent >= self.context_warning_threshold
+
+        if warn and exceeds_threshold and not exceeds_limit:
+            warnings.warn(
+                f"Context usage at {usage_percent:.1%} ({tokens}/{limit} tokens). "
+                "Consider truncating messages to avoid errors.",
+                stacklevel=2,
+            )
+
+        if warn and exceeds_limit:
+            warnings.warn(
+                f"Context limit exceeded: {tokens} tokens > {limit} limit. "
+                "Request may fail. Use truncate_messages() to fit within limits.",
+                stacklevel=2,
+            )
+
+        return {
+            "tokens": tokens,
+            "limit": limit,
+            "usage_percent": usage_percent,
+            "exceeds_limit": exceeds_limit,
+            "exceeds_threshold": exceeds_threshold,
+        }
+
+    def truncate_messages(
+        self,
+        messages: list[BaseMessage],
+        max_tokens: int | None = None,
+        preserve_system: bool = True,
+        preserve_recent: int = 1,
+    ) -> list[BaseMessage]:
+        """Truncate messages to fit within context window.
+
+        Removes older messages (keeping system messages and recent messages)
+        until the total token count is within the limit.
+
+        Args:
+            messages: List of messages to truncate.
+            max_tokens: Maximum tokens allowed. Defaults to model's context limit.
+            preserve_system: Whether to preserve system messages.
+            preserve_recent: Number of recent non-system messages to always keep.
+
+        Returns:
+            Truncated list of messages that fits within the token limit.
+
+        Example:
+            .. code-block:: python
+
+                model = ChatMaritaca()
+                long_conversation = [
+                    SystemMessage(content="You are a helpful assistant."),
+                    HumanMessage(content="First message"),
+                    AIMessage(content="First response"),
+                    HumanMessage(content="Second message"),
+                    AIMessage(content="Second response"),
+                    HumanMessage(content="Third message"),  # Most recent
+                ]
+
+                # Truncate to 1000 tokens, keeping system + last message
+                truncated = model.truncate_messages(
+                    long_conversation,
+                    max_tokens=1000,
+                    preserve_recent=2,  # Keep last 2 non-system messages
+                )
+        """
+        if not messages:
+            return []
+
+        limit = max_tokens or self.get_context_limit()
+
+        # Check if already within limit
+        current_tokens = self.get_num_tokens_from_messages(messages)
+        if current_tokens <= limit:
+            return messages.copy()
+
+        # Separate system messages and other messages
+        system_messages: list[BaseMessage] = []
+        other_messages: list[BaseMessage] = []
+
+        for msg in messages:
+            if preserve_system and isinstance(msg, SystemMessage):
+                system_messages.append(msg)
+            else:
+                other_messages.append(msg)
+
+        # Calculate tokens used by system messages
+        system_tokens = (
+            self.get_num_tokens_from_messages(system_messages) if system_messages else 0
+        )
+        available_tokens = limit - system_tokens
+
+        if available_tokens <= 0:
+            # System messages alone exceed limit, return just system messages
+            logger.warning(
+                "System messages alone exceed context limit. "
+                "Consider shortening system prompt."
+            )
+            return system_messages.copy()
+
+        # Keep recent messages, remove older ones
+        preserved_recent = other_messages[-preserve_recent:] if preserve_recent else []
+        candidates = other_messages[:-preserve_recent] if preserve_recent else []
+
+        # Start with preserved recent messages
+        result_other: list[BaseMessage] = []
+        used_tokens = self.get_num_tokens_from_messages(preserved_recent)
+
+        # Add older messages from most recent to oldest until we can't fit more
+        for msg in reversed(candidates):
+            msg_tokens = self.get_num_tokens_from_messages([msg])
+            if used_tokens + msg_tokens <= available_tokens:
+                result_other.insert(0, msg)
+                used_tokens += msg_tokens
+
+        # Add preserved recent messages at the end
+        result_other.extend(preserved_recent)
+
+        # Combine system messages and other messages
+        final_result = system_messages + result_other
+
+        if len(final_result) < len(messages):
+            removed = len(messages) - len(final_result)
+            logger.info(
+                f"Truncated {removed} messages to fit within {limit} token limit."
+            )
+
+        return final_result
 
 
 def _convert_message_to_dict(message: BaseMessage) -> dict[str, Any]:
