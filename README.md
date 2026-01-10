@@ -21,10 +21,13 @@ Maritaca AI provides state-of-the-art Brazilian Portuguese language models, incl
 
 ### Available Models
 
-| Model | Description | Pricing (per 1M tokens) |
-|-------|-------------|------------------------|
-| `sabia-3.1.1` | Most capable model, best for complex tasks | Check [Maritaca AI](https://www.maritaca.ai/) for pricing |
-| `sabiazinho-3.1` | Fast and economical, great for simple tasks | Check [Maritaca AI](https://www.maritaca.ai/) for pricing |
+| Model | Context | Input (R$/1M) | Output (R$/1M) | Vision |
+|-------|---------|---------------|----------------|--------|
+| `sabia-3.1` | 128k | R$5.00 | R$10.00 | Yes |
+| `sabiazinho-4` | 128k | R$1.00 | R$4.00 | Yes |
+| `sabiazinho-3.1` | 32k | R$1.00 | R$3.00 | Yes |
+
+> **Note:** All models support vision/multimodal inputs (images).
 
 ## Installation
 
@@ -132,6 +135,45 @@ model_with_tools = model.bind_tools([get_weather])
 
 response = model_with_tools.invoke("Como está o tempo em São Paulo?")
 print(response)
+```
+
+### Vision / Multimodal (Images)
+
+All Maritaca models support image inputs. You can send images via URL or base64:
+
+```python
+from langchain_maritaca import ChatMaritaca
+from langchain_core.messages import HumanMessage
+
+model = ChatMaritaca(model="sabiazinho-4")
+
+# With image URL
+response = model.invoke([
+    HumanMessage(content=[
+        {"type": "text", "text": "O que você vê nesta imagem?"},
+        {"type": "image", "url": "https://example.com/image.jpg"}
+    ])
+])
+print(response.content)
+
+# With base64-encoded image
+response = model.invoke([
+    HumanMessage(content=[
+        {"type": "text", "text": "Descreva esta imagem em detalhes"},
+        {"type": "image", "base64": "iVBORw0KGgo...", "mime_type": "image/png"}
+    ])
+])
+```
+
+Also compatible with OpenAI's `image_url` format:
+
+```python
+response = model.invoke([
+    HumanMessage(content=[
+        {"type": "text", "text": "What's in this image?"},
+        {"type": "image_url", "image_url": {"url": "https://example.com/photo.jpg"}}
+    ])
+])
 ```
 
 ### With Caching

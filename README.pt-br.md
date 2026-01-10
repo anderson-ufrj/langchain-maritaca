@@ -21,10 +21,13 @@ A Maritaca AI oferece modelos de linguagem de última geração para Português 
 
 ### Modelos Disponíveis
 
-| Modelo | Descrição | Preço (por 1M tokens) |
-|--------|-----------|----------------------|
-| `sabia-3.1.1` | Modelo mais capaz, ideal para tarefas complexas | Consulte [Maritaca AI](https://www.maritaca.ai/) |
-| `sabiazinho-3.1` | Rápido e econômico, ótimo para tarefas simples | Consulte [Maritaca AI](https://www.maritaca.ai/) |
+| Modelo | Contexto | Input (R$/1M) | Output (R$/1M) | Vision |
+|--------|----------|---------------|----------------|--------|
+| `sabia-3.1` | 128k | R$5,00 | R$10,00 | Sim |
+| `sabiazinho-4` | 128k | R$1,00 | R$4,00 | Sim |
+| `sabiazinho-3.1` | 32k | R$1,00 | R$3,00 | Sim |
+
+> **Nota:** Todos os modelos suportam entradas multimodais (imagens).
 
 ## Instalação
 
@@ -132,6 +135,45 @@ model_with_tools = model.bind_tools([get_weather])
 
 response = model_with_tools.invoke("Como está o tempo em São Paulo?")
 print(response)
+```
+
+### Vision / Multimodal (Imagens)
+
+Todos os modelos da Maritaca suportam entrada de imagens. Você pode enviar imagens via URL ou base64:
+
+```python
+from langchain_maritaca import ChatMaritaca
+from langchain_core.messages import HumanMessage
+
+model = ChatMaritaca(model="sabiazinho-4")
+
+# Com URL da imagem
+response = model.invoke([
+    HumanMessage(content=[
+        {"type": "text", "text": "O que você vê nesta imagem?"},
+        {"type": "image", "url": "https://example.com/imagem.jpg"}
+    ])
+])
+print(response.content)
+
+# Com imagem codificada em base64
+response = model.invoke([
+    HumanMessage(content=[
+        {"type": "text", "text": "Descreva esta imagem em detalhes"},
+        {"type": "image", "base64": "iVBORw0KGgo...", "mime_type": "image/png"}
+    ])
+])
+```
+
+Também compatível com o formato `image_url` da OpenAI:
+
+```python
+response = model.invoke([
+    HumanMessage(content=[
+        {"type": "text", "text": "O que há nesta imagem?"},
+        {"type": "image_url", "image_url": {"url": "https://example.com/foto.jpg"}}
+    ])
+])
 ```
 
 ### Com Saída Estruturada
