@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-01-10
+
+### Changed
+
+- **LangChain 1.x Support**: Updated dependency to support `langchain-core>=0.3.0,<2.0.0`
+  - Fully compatible with langchain-core 1.0, 1.1, and 1.2
+  - All 157 unit tests pass with langchain-core 1.2.7
+  - No breaking changes to the public API
+- This is a minor version bump to signal the expanded compatibility range
+
+### Notes
+
+- Projects using langchain 1.x can now use langchain-maritaca
+- Backward compatible with langchain-core 0.3.x
+
+## [0.2.4] - 2026-01-04
+
+### Added
+
+- **Context Window Management**: Automatic context limit handling
+  - `get_context_limit()`: Get model's context window size
+  - `check_context_usage()`: Check token usage percentage with warnings
+  - `truncate_messages()`: Automatically truncate to fit context
+  - `max_context_tokens`: Custom context limit parameter
+  - `auto_truncate`: Enable automatic message truncation
+  - `context_warning_threshold`: Configurable warning threshold (default: 90%)
+- **Model Selection Helper**: Intelligent model recommendations
+  - `list_available_models()`: List all models with specs
+  - `recommend_model()`: Get recommendations based on task complexity, input length, and priority
+  - Model specs include context limits, pricing, and capabilities
+- **Batch Processing Optimization**: Efficient bulk request handling
+  - `abatch_with_concurrency()`: Async batch with configurable concurrency
+  - `batch_with_progress()`: Sync batch with progress callbacks
+  - `abatch_estimate_cost()`: Estimate cost before batch execution
+
 ## [0.2.3] - 2025-12-28
 
 ### Added
@@ -120,7 +155,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Rate Limiting**: Graceful handling of API rate limits
 - **Tracing**: Built-in LangSmith integration for observability
 
-[Unreleased]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.4...v0.3.0
+[0.2.4]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.0...v0.2.1
