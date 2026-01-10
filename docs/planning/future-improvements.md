@@ -177,10 +177,40 @@ Use batch API endpoint if available for better throughput.
 **Complexity**: Medium
 **Impact**: Low - Performance improvement for batch operations
 
-### 9. Multimodal/Vision Support
-Add support for image inputs when Maritaca API supports it.
+### 9. ~~Multimodal/Vision Support~~ ✅ IMPLEMENTED (v0.4.0)
+~~Add support for image inputs when Maritaca API supports it.~~
 
-**Status**: Waiting for API support
+Maritaca API now supports vision! Implemented full multimodal support:
+
+```python
+from langchain_maritaca import ChatMaritaca
+from langchain_core.messages import HumanMessage
+
+model = ChatMaritaca(model="sabiazinho-4")
+
+# With image URL
+response = model.invoke([
+    HumanMessage(content=[
+        {"type": "text", "text": "O que há nesta imagem?"},
+        {"type": "image", "url": "https://example.com/image.jpg"}
+    ])
+])
+
+# With base64 image
+response = model.invoke([
+    HumanMessage(content=[
+        {"type": "text", "text": "Descreva esta imagem"},
+        {"type": "image", "base64": "iVBORw0K...", "mime_type": "image/png"}
+    ])
+])
+```
+
+**Supported formats:**
+- LangChain standard: `{"type": "image", "url": "..."}`
+- LangChain standard: `{"type": "image", "base64": "...", "mime_type": "..."}`
+- OpenAI format: `{"type": "image_url", "image_url": {"url": "..."}}`
+
+**Status**: ✅ IMPLEMENTED
 **Complexity**: High
 **Impact**: High - Enables vision tasks
 

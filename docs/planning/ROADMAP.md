@@ -3,7 +3,7 @@
 Consolidated roadmap with detailed implementation steps for each planned feature.
 
 > **Last Updated:** January 2026
-> **Current Version:** v0.2.4
+> **Current Version:** v0.4.0
 
 ---
 
@@ -18,7 +18,7 @@ Consolidated roadmap with detailed implementation steps for each planned feature
 | ~~Context Window Management~~ | Medium | Low | **IMPLEMENTED** |
 | ~~Model Selection Helper~~ | Low | Low | **IMPLEMENTED** |
 | ~~Batch Optimization~~ | Low | Medium | **IMPLEMENTED** |
-| Multimodal/Vision Support | Low | High | Blocked (API) |
+| ~~Multimodal/Vision Support~~ | Low | High | **IMPLEMENTED** |
 
 ---
 
@@ -236,36 +236,46 @@ All planned features for v0.2.4 have been implemented.
 
 ---
 
-### 6. Multimodal/Vision Support
+### 6. ~~Multimodal/Vision Support~~ ✅ IMPLEMENTED
 
-**Goal:** Support image inputs when Maritaca API adds vision capabilities.
+**Goal:** Support image inputs for vision capabilities.
 
-**Status:** BLOCKED - Waiting for Maritaca API to support image inputs.
+**Status:** ✅ IMPLEMENTED in v0.4.0
 
-**Preparation Steps:**
+**Implemented Features:**
+- Image URL support
+- Base64 image support
+- LangChain standard format compatibility
+- OpenAI `image_url` format compatibility
+- Anthropic-style API format (type: image, source: {type, url/data})
 
-1. **Monitor Maritaca API updates**
-   - Check API documentation periodically
-   - Subscribe to Maritaca announcements
+**Usage:**
+```python
+from langchain_maritaca import ChatMaritaca
+from langchain_core.messages import HumanMessage
 
-2. **Research LangChain multimodal patterns**
-   - Study how other integrations handle images
-   - Understand `ImageBlock` and `HumanMessageChunk`
+model = ChatMaritaca(model="sabiazinho-4")
 
-3. **When API available:**
-   - Implement image content handling
-   - Add base64 encoding utilities
-   - Support URL and local file inputs
+# Image URL
+response = model.invoke([
+    HumanMessage(content=[
+        {"type": "text", "text": "O que você vê nesta imagem?"},
+        {"type": "image", "url": "https://example.com/image.jpg"}
+    ])
+])
 
-4. **Testing considerations:**
-   - Mock image API for unit tests
-   - Create integration tests with real images
+# Base64 image
+response = model.invoke([
+    HumanMessage(content=[
+        {"type": "text", "text": "Descreva esta imagem"},
+        {"type": "image", "base64": "...", "mime_type": "image/png"}
+    ])
+])
+```
 
-**Files to modify (when ready):**
-- `langchain_maritaca/chat_models.py`
-- `tests/unit_tests/test_vision.py` (new)
-- `tests/integration_tests/test_vision.py` (new)
-- `docs/en/guide/vision.md` (new)
+**Files modified:**
+- `langchain_maritaca/chat_models.py` - Added `_format_image_content()` function
+- `tests/unit_tests/test_vision.py` - Unit tests for vision support
 
 ---
 

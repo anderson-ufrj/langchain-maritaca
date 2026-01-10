@@ -18,12 +18,14 @@ class TestContextWindowConstants:
         """Test that model context limits are properly defined."""
         assert "sabia-3.1" in MODEL_CONTEXT_LIMITS
         assert "sabiazinho-3.1" in MODEL_CONTEXT_LIMITS
-        assert MODEL_CONTEXT_LIMITS["sabia-3.1"] == 32768
-        assert MODEL_CONTEXT_LIMITS["sabiazinho-3.1"] == 8192
+        assert "sabiazinho-4" in MODEL_CONTEXT_LIMITS
+        assert MODEL_CONTEXT_LIMITS["sabia-3.1"] == 128000
+        assert MODEL_CONTEXT_LIMITS["sabiazinho-3.1"] == 32000
+        assert MODEL_CONTEXT_LIMITS["sabiazinho-4"] == 128000
 
     def test_default_context_limit(self) -> None:
         """Test default context limit value."""
-        assert DEFAULT_CONTEXT_LIMIT == 32768
+        assert DEFAULT_CONTEXT_LIMIT == 128000
 
 
 class TestGetContextLimit:
@@ -32,12 +34,17 @@ class TestGetContextLimit:
     def test_get_context_limit_sabia(self) -> None:
         """Test context limit for sabia-3.1."""
         model = ChatMaritaca(model="sabia-3.1", api_key="test")
-        assert model.get_context_limit() == 32768
+        assert model.get_context_limit() == 128000
 
     def test_get_context_limit_sabiazinho(self) -> None:
         """Test context limit for sabiazinho-3.1."""
         model = ChatMaritaca(model="sabiazinho-3.1", api_key="test")
-        assert model.get_context_limit() == 8192
+        assert model.get_context_limit() == 32000
+
+    def test_get_context_limit_sabiazinho4(self) -> None:
+        """Test context limit for sabiazinho-4."""
+        model = ChatMaritaca(model="sabiazinho-4", api_key="test")
+        assert model.get_context_limit() == 128000
 
     def test_get_context_limit_custom(self) -> None:
         """Test custom context limit override."""

@@ -64,10 +64,11 @@ logger = logging.getLogger(__name__)
 
 # Context window limits for Maritaca models (in tokens)
 MODEL_CONTEXT_LIMITS: dict[str, int] = {
-    "sabia-3.1": 32768,
-    "sabiazinho-3.1": 8192,
+    "sabia-3.1": 128000,
+    "sabiazinho-3.1": 32000,
+    "sabiazinho-4": 128000,
 }
-DEFAULT_CONTEXT_LIMIT = 32768
+DEFAULT_CONTEXT_LIMIT = 128000
 
 # Warning threshold (percentage of context used)
 CONTEXT_WARNING_THRESHOLD = 0.9  # Warn at 90% usage
@@ -75,22 +76,31 @@ CONTEXT_WARNING_THRESHOLD = 0.9  # Warn at 90% usage
 # Model specifications for selection helper
 MODEL_SPECS: dict[str, dict[str, Any]] = {
     "sabia-3.1": {
-        "context_limit": 32768,
-        "input_cost_per_1m": 0.50,
-        "output_cost_per_1m": 1.50,
+        "context_limit": 128000,
+        "input_cost_per_1m": 5.00,
+        "output_cost_per_1m": 10.00,
         "complexity": "high",
         "speed": "medium",
-        "capabilities": ["complex_reasoning", "long_context", "tool_calling"],
+        "capabilities": ["complex_reasoning", "long_context", "tool_calling", "vision"],
         "description": "Most capable model, best for complex tasks",
     },
     "sabiazinho-3.1": {
-        "context_limit": 8192,
-        "input_cost_per_1m": 0.10,
-        "output_cost_per_1m": 0.30,
+        "context_limit": 32000,
+        "input_cost_per_1m": 1.00,
+        "output_cost_per_1m": 3.00,
         "complexity": "medium",
         "speed": "fast",
-        "capabilities": ["simple_tasks", "quick_responses", "tool_calling"],
+        "capabilities": ["simple_tasks", "quick_responses", "tool_calling", "vision"],
         "description": "Fast and economical, great for simple tasks",
+    },
+    "sabiazinho-4": {
+        "context_limit": 128000,
+        "input_cost_per_1m": 1.00,
+        "output_cost_per_1m": 4.00,
+        "complexity": "medium",
+        "speed": "fast",
+        "capabilities": ["simple_tasks", "quick_responses", "tool_calling", "vision"],
+        "description": "Latest fast model with vision support and 128k context",
     },
 }
 
@@ -1505,6 +1515,86 @@ class ChatMaritaca(BaseChatModel):
         }
 
 
+def _format_image_content(content: str | list[Any]) -> str | list[dict[str, Any]]:
+    """Format message content, handling multimodal inputs with images.
+
+    Converts LangChain standard image blocks and OpenAI image_url format
+    to Maritaca API format (Anthropic-style).
+
+    Args:
+        content: String content or list of content blocks.
+
+    Returns:
+        Formatted content for Maritaca API.
+    """
+    if isinstance(content, str):
+        return content
+
+    # Multimodal content (list of blocks)
+    formatted: list[dict[str, Any]] = []
+    for block in content:
+        if isinstance(block, str):
+            formatted.append({"type": "text", "text": block})
+        elif isinstance(block, dict):
+            block_type = block.get("type", "text")
+
+            if block_type == "text":
+                formatted.append({"type": "text", "text": block.get("text", "")})
+
+            elif block_type == "image":
+                # LangChain standard format -> Anthropic format
+                image_block: dict[str, Any] = {"type": "image", "source": {}}
+
+                if "base64" in block:
+                    image_block["source"] = {
+                        "type": "base64",
+                        "media_type": block.get("mime_type", "image/png"),
+                        "data": block["base64"],
+                    }
+                elif "url" in block:
+                    image_block["source"] = {
+                        "type": "url",
+                        "url": block["url"],
+                    }
+                formatted.append(image_block)
+
+            elif block_type == "image_url":
+                # OpenAI format compatibility -> Anthropic format
+                image_url = block.get("image_url", {})
+                url = (
+                    image_url.get("url", "")
+                    if isinstance(image_url, dict)
+                    else str(image_url)
+                )
+
+                if url.startswith("data:"):
+                    # Parse data URI: data:image/png;base64,xxxxx
+                    parts = url.split(",", 1)
+                    header = parts[0]  # data:image/png;base64
+                    data = parts[1] if len(parts) > 1 else ""
+                    media_type = header.replace("data:", "").replace(";base64", "")
+
+                    formatted.append(
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": media_type,
+                                "data": data,
+                            },
+                        }
+                    )
+                else:
+                    formatted.append(
+                        {"type": "image", "source": {"type": "url", "url": url}}
+                    )
+            else:
+                # Pass through other types
+                formatted.append(block)
+
+    return formatted
+
+
 def _convert_message_to_dict(message: BaseMessage) -> dict[str, Any]:
     """Convert a LangChain message to Maritaca format.
 
@@ -1515,9 +1605,12 @@ def _convert_message_to_dict(message: BaseMessage) -> dict[str, Any]:
         Dictionary in Maritaca API format.
     """
     if isinstance(message, ChatMessage):
-        return {"role": message.role, "content": message.content}
+        return {
+            "role": message.role,
+            "content": _format_image_content(message.content),
+        }
     if isinstance(message, HumanMessage):
-        return {"role": "user", "content": message.content}
+        return {"role": "user", "content": _format_image_content(message.content)}
     if isinstance(message, AIMessage):
         result: dict[str, Any] = {
             "role": "assistant",

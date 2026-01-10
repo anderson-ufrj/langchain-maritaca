@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-01-10
+
+### Added
+
+- **Sabiazinho-4 Model Support**: New fast, economical model with 128k context
+  - Input: R$1.00/M tokens, Output: R$4.00/M tokens
+  - 128,000 token context window
+  - Vision/multimodal support
+  - Optimized for legal documents and long-form content
+- **Vision/Multimodal Support**: Process images alongside text
+  - Support for image URLs
+  - Support for base64-encoded images
+  - Compatible with LangChain standard image format
+  - Compatible with OpenAI `image_url` format
+  - Anthropic-style API format (type: image, source: {type, url/data})
+
+### Changed
+
+- **Updated Context Limits**: All models now have larger context windows
+  - `sabia-3.1`: 128,000 tokens (was 32,768)
+  - `sabiazinho-3.1`: 32,000 tokens (was 8,192)
+  - `sabiazinho-4`: 128,000 tokens (new)
+- **Updated Pricing**: Reflects current Maritaca AI pricing (in BRL)
+  - `sabia-3.1`: R$5.00/R$10.00 per 1M tokens (input/output)
+  - `sabiazinho-3.1`: R$1.00/R$3.00 per 1M tokens
+  - `sabiazinho-4`: R$1.00/R$4.00 per 1M tokens
+- All models now include `vision` in their capabilities
+
 ## [0.3.0] - 2026-01-10
 
 ### Changed
@@ -155,7 +183,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Rate Limiting**: Graceful handling of API rate limits
 - **Tracing**: Built-in LangSmith integration for observability
 
-[Unreleased]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.4...v0.3.0
 [0.2.4]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/anderson-ufrj/langchain-maritaca/compare/v0.2.2...v0.2.3
