@@ -1657,8 +1657,8 @@ def _convert_dict_to_message(message_dict: Mapping[str, Any]) -> BaseMessage:
     if role == "user":
         return HumanMessage(content=content)
     if role == "assistant":
-        # Parse tool_calls if present
-        tool_calls_data = message_dict.get("tool_calls", [])
+        # Parse tool_calls if present (handle None from API)
+        tool_calls_data = message_dict.get("tool_calls") or []
         tool_calls = []
         for tc in tool_calls_data:
             func = tc.get("function", {})

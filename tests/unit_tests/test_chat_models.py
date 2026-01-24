@@ -390,6 +390,36 @@ class TestToolCalling:
         assert result.content == "The weather is sunny"
         assert result.tool_call_id == "call_789"
 
+    def test_convert_dict_with_null_tool_calls(self) -> None:
+        """Test converting dict when tool_calls is explicitly None.
+
+        This is a regression test for the bug where the API returns
+        tool_calls: null instead of omitting the field entirely.
+        """
+        msg_dict = {
+            "role": "assistant",
+            "content": "Hello, how can I help you?",
+            "tool_calls": None,  # API can return null explicitly
+        }
+        result = _convert_dict_to_message(msg_dict)
+
+        assert isinstance(result, AIMessage)
+        assert result.content == "Hello, how can I help you?"
+        assert result.tool_calls == []
+
+    def test_convert_dict_without_tool_calls_key(self) -> None:
+        """Test converting dict when tool_calls key is absent."""
+        msg_dict = {
+            "role": "assistant",
+            "content": "Hello, how can I help you?",
+            # tool_calls key is not present at all
+        }
+        result = _convert_dict_to_message(msg_dict)
+
+        assert isinstance(result, AIMessage)
+        assert result.content == "Hello, how can I help you?"
+        assert result.tool_calls == []
+
     def test_create_chat_result_with_tool_calls(self) -> None:
         """Test _create_chat_result with tool calls in response."""
         model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
