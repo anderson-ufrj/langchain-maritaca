@@ -2,8 +2,8 @@
 
 Consolidated roadmap with detailed implementation steps for each planned feature.
 
-> **Last Updated:** January 2026
-> **Current Version:** v0.4.0
+> **Last Updated:** February 2026
+> **Current Version:** v0.4.1
 
 ---
 
@@ -292,6 +292,73 @@ response = model.invoke([
 | Cache Integration | v0.2.3 | Dec 2025 |
 | Enhanced Callbacks | v0.2.3 | Dec 2025 |
 | Token Counter | v0.2.3 | Dec 2025 |
+
+---
+
+## Upstream Contribution (langchain-community)
+
+**Status:** In progress (commit local, pendente PR)
+**Target repo:** `langchain-ai/langchain-community`
+**Fork:** `anderson-ufrj/langchain-community`
+**Branch:** `feat/update-maritalk-chat-model`
+
+### Context
+
+The existing `ChatMaritalk` in `langchain-community` is severely outdated:
+- Uses deprecated `/api/chat/inference` endpoint
+- Old auth format (`Key xxx` instead of `Bearer xxx`)
+- Only supports deprecated models (sabia-2-*)
+- No tool calling, structured output, or retry logic
+- Uses `requests` sync only (async via lazy httpx import)
+
+### What was ported
+
+A full rewrite of `libs/community/langchain_community/chat_models/maritalk.py`
+based on our `langchain-maritaca` implementation, adapted to community patterns:
+
+| Feature | Old (community) | New (our PR) |
+|---------|-----------------|--------------|
+| API endpoint | `/api/chat/inference` | `/api/chat/completions` |
+| Auth | `Key xxx` | `Bearer xxx` |
+| Models | sabia-2-* (deprecated) | sabia-3.1, sabiazinho-3.1, sabiazinho-4 |
+| Tool calling | None | `bind_tools()` |
+| Structured output | None | `with_structured_output()` |
+| Retry logic | None | Exponential backoff |
+| API key | Plain `str` | `SecretStr` |
+| Serialization | None | `is_lc_serializable`, `lc_secrets` |
+| Token tracking | None | `UsageMetadata` |
+| Streaming format | `{"text": "..."}` | OpenAI SSE `choices/delta` |
+| Sync HTTP | `requests` | `requests` (kept) |
+| Async HTTP | lazy `httpx` | `httpx` (kept) |
+
+### What was NOT ported (scope control)
+
+- Token counting (`get_num_tokens`) - optional tiktoken dep
+- Cost estimation (`estimate_cost`) - pricing changes frequently
+- Context window management - too opinionated for community
+- Model recommendation - too opinionated
+- Batch with progress - not a community pattern
+- Vision/multimodal - follow-up PR
+
+### Checklist before PR
+
+- [x] Fork langchain-community
+- [x] Rewrite maritalk.py
+- [x] 23 unit tests (all passing)
+- [x] Lint clean (ruff)
+- [x] Backward compat (`MaritalkHTTPError`, `do_sample` with warning)
+- [ ] Integration tests with live API
+- [ ] Verify langchain-community CI (mypy, full ruff config)
+- [ ] Push to remote
+- [ ] Create PR
+- [ ] Sync fork with upstream if needed
+
+### Key decisions
+
+1. **Full rewrite, not incremental** - Old endpoint is deprecated, every method needed rewriting
+2. **`requests` for sync, `httpx` for async** - Follows community patterns (deepinfra.py, etc.)
+3. **`MaritalkHTTPError` kept** - Backward compat, someone might be catching it
+4. **`do_sample` accepted with `DeprecationWarning`** - Doesn't break existing code
 
 ---
 
