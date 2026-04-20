@@ -127,9 +127,22 @@ def _default_fallback_chain(primary: str) -> list[str]:
     return [m for m in _CANONICAL_FALLBACK_ORDER if m != primary]
 
 
+_TRANSIENT_STATUS_CODES: frozenset[int] = frozenset({429, 502, 503, 504})
+
+
+class _TransientHTTPStatusError(httpx.HTTPStatusError):
+    """HTTPStatusError subclass carrying only transient (fallback-worthy) errors.
+
+    The base class is still raised for anything else, so callers without a
+    fallback wrapper see the canonical exception type. This subclass lets
+    with_smart_fallbacks() filter precisely without a brittle inspection of
+    response.status_code inside LangChain's fallback machinery.
+    """
+
+
 _DEFAULT_FALLBACK_EXCEPTIONS: tuple[type[BaseException], ...] = (
     httpx.TimeoutException,
-    httpx.HTTPStatusError,
+    _TransientHTTPStatusError,
 )
 
 
@@ -832,6 +845,10 @@ class ChatMaritaca(BaseChatModel):
                     )
                     time.sleep(retry_after)
                     continue
+                if e.response.status_code in _TRANSIENT_STATUS_CODES:
+                    raise _TransientHTTPStatusError(
+                        str(e), request=e.request, response=e.response
+                    ) from e
                 raise
             except httpx.TimeoutException:
                 if attempt < self.max_retries:
@@ -863,6 +880,10 @@ class ChatMaritaca(BaseChatModel):
                     )
                     await asyncio.sleep(retry_after)
                     continue
+                if e.response.status_code in _TRANSIENT_STATUS_CODES:
+                    raise _TransientHTTPStatusError(
+                        str(e), request=e.request, response=e.response
+                    ) from e
                 raise
             except httpx.TimeoutException:
                 if attempt < self.max_retries:
