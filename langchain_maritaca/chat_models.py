@@ -454,6 +454,30 @@ class ChatMaritaca(BaseChatModel):
         formatted_tools = [convert_to_openai_tool(tool) for tool in tools]
         return self.bind(tools=formatted_tools, tool_choice=tool_choice, **kwargs)
 
+    @classmethod
+    def with_smart_fallbacks_from_primary(
+        cls,
+        primary: str,
+        *,
+        fallbacks: list[str] | None = None,
+        exceptions_to_handle: tuple[type[BaseException], ...] | None = None,
+        **kwargs: Any,
+    ) -> Runnable[Any, BaseMessage]:
+        """Build a ChatMaritaca with ``model=primary`` and wrap it in fallbacks.
+
+        Args:
+            primary: Model name for the primary ChatMaritaca.
+            fallbacks: Optional explicit fallback model names.
+            exceptions_to_handle: Optional transient-error override.
+            **kwargs: Passed through to ``ChatMaritaca(...)`` for the primary
+                (and therefore inherited by the sibling fallback models).
+        """
+        primary_model = cls(model=primary, **kwargs)  # type: ignore[call-arg]
+        return primary_model.with_smart_fallbacks(
+            fallbacks=fallbacks,
+            exceptions_to_handle=exceptions_to_handle,
+        )
+
     def with_smart_fallbacks(
         self,
         fallbacks: list[str] | None = None,

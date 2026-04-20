@@ -78,3 +78,40 @@ class TestWithSmartFallbacksInstance:
         model = ChatMaritaca(api_key="test-key", model="sabia-4")  # type: ignore[arg-type]
         with pytest.raises(ValueError, match="no default fallback chain"):
             model.with_smart_fallbacks()
+
+
+class TestWithSmartFallbacksClassmethod:
+    """Tests for ChatMaritaca.with_smart_fallbacks_from_primary(...)."""
+
+    def test_classmethod_builds_primary_and_fallbacks(self) -> None:
+        chain = ChatMaritaca.with_smart_fallbacks_from_primary(
+            primary="sabia-3.1",
+            api_key="test-key",
+            temperature=0.3,
+        )
+        # RunnableWithFallbacks exposes the primary as .runnable
+        assert chain.runnable.model_name == "sabia-3.1"
+        assert chain.runnable.temperature == 0.3
+        fallback_models = [f.model_name for f in chain.fallbacks]
+        assert fallback_models == ["sabiazinho-4", "sabiazinho-3.1"]
+
+    def test_classmethod_accepts_explicit_fallbacks(self) -> None:
+        chain = ChatMaritaca.with_smart_fallbacks_from_primary(
+            primary="sabia-3.1",
+            fallbacks=["sabiazinho-3.1"],
+            api_key="test-key",
+        )
+        assert [f.model_name for f in chain.fallbacks] == ["sabiazinho-3.1"]
+
+    def test_classmethod_matches_instance_method_for_same_config(self) -> None:
+        from_classmethod = ChatMaritaca.with_smart_fallbacks_from_primary(
+            primary="sabia-3.1", api_key="test-key", temperature=0.7
+        )
+        from_instance = ChatMaritaca(
+            api_key="test-key",  # type: ignore[arg-type]
+            model="sabia-3.1",
+            temperature=0.7,
+        ).with_smart_fallbacks()
+        assert [f.model_name for f in from_classmethod.fallbacks] == [
+            f.model_name for f in from_instance.fallbacks
+        ]
