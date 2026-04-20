@@ -104,6 +104,28 @@ MODEL_SPECS: dict[str, dict[str, Any]] = {
     },
 }
 
+# Canonical fallback ordering across the Sabiá family. Used when callers do not
+# supply their own fallback list in with_smart_fallbacks(). Order reflects a
+# capability-then-recency heuristic, so fallbacks preserve quality first and
+# cost/latency second.
+_CANONICAL_FALLBACK_ORDER: tuple[str, ...] = (
+    "sabia-3.1",
+    "sabiazinho-4",
+    "sabiazinho-3.1",
+)
+
+
+def _default_fallback_chain(primary: str) -> list[str]:
+    """Return the canonical fallback model order for a given primary.
+
+    Unknown primary models return an empty list so callers get a clear signal
+    (and a DRY-safe config error at the ChatMaritaca level) instead of a
+    silent no-op.
+    """
+    if primary not in _CANONICAL_FALLBACK_ORDER:
+        return []
+    return [m for m in _CANONICAL_FALLBACK_ORDER if m != primary]
+
 
 class ChatMaritaca(BaseChatModel):
     r"""Maritaca AI Chat large language models API.
