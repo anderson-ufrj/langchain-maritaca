@@ -127,6 +127,12 @@ def _default_fallback_chain(primary: str) -> list[str]:
     return [m for m in _CANONICAL_FALLBACK_ORDER if m != primary]
 
 
+_DEFAULT_FALLBACK_EXCEPTIONS: tuple[type[BaseException], ...] = (
+    httpx.TimeoutException,
+    httpx.HTTPStatusError,
+)
+
+
 class ChatMaritaca(BaseChatModel):
     r"""Maritaca AI Chat large language models API.
 
@@ -447,6 +453,64 @@ class ChatMaritaca(BaseChatModel):
         """
         formatted_tools = [convert_to_openai_tool(tool) for tool in tools]
         return self.bind(tools=formatted_tools, tool_choice=tool_choice, **kwargs)
+
+    def with_smart_fallbacks(
+        self,
+        fallbacks: list[str] | None = None,
+        *,
+        exceptions_to_handle: tuple[type[BaseException], ...] | None = None,
+    ) -> Runnable[Any, BaseMessage]:
+        """Wrap this model in a pre-configured fallback chain.
+
+        Creates sibling ChatMaritaca instances that share all of this model's
+        config (api key, temperature, max_tokens, callbacks, retry_*), varying
+        only the ``model`` attribute. Returns a ``RunnableWithFallbacks`` that
+        tries them in order on transient errors only.
+
+        Args:
+            fallbacks: Optional explicit list of Maritaca model names. When
+                omitted, the canonical Sabiá fallback order is used (excluding
+                the current primary). Raises ``ValueError`` if no default chain
+                is known for this primary.
+            exceptions_to_handle: Override the default transient-error filter.
+                By default, only ``httpx.TimeoutException`` and
+                ``httpx.HTTPStatusError`` trigger a fallback. Task 5 narrows
+                this to only transient status codes.
+
+        Returns:
+            A Runnable behaving like this model but falling back on transient
+            failures.
+        """
+        effective_fallbacks = (
+            fallbacks
+            if fallbacks is not None
+            else _default_fallback_chain(self.model_name)
+        )
+        if not effective_fallbacks:
+            msg = (
+                f"ChatMaritaca.with_smart_fallbacks: no default fallback chain "
+                f"is defined for primary model {self.model_name!r}. Pass an "
+                f"explicit `fallbacks=[...]` list."
+            )
+            raise ValueError(msg)
+
+        for name in effective_fallbacks:
+            if name not in MODEL_SPECS:
+                msg = (
+                    f"ChatMaritaca.with_smart_fallbacks: unknown model "
+                    f"{name!r}. Known models: {sorted(MODEL_SPECS)}."
+                )
+                raise ValueError(msg)
+
+        siblings = [
+            self.model_copy(update={"model_name": name}) for name in effective_fallbacks
+        ]
+        filter_: tuple[type[BaseException], ...] = (
+            exceptions_to_handle
+            if exceptions_to_handle is not None
+            else _DEFAULT_FALLBACK_EXCEPTIONS
+        )
+        return self.with_fallbacks(siblings, exceptions_to_handle=filter_)
 
     def with_structured_output(
         self,
