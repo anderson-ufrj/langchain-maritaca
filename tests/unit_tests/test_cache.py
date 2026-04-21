@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pytest
 from langchain_core.embeddings import Embeddings
 from langchain_core.messages import AIMessage
 from langchain_core.outputs import ChatGeneration, Generation
@@ -146,3 +147,51 @@ class TestSemanticCacheLRU:
         assert cache.lookup("two", "{}") is None
         assert cache.lookup("one", "{}") is not None
         assert cache.lookup("three", "{}") is not None
+
+
+class _RaisingEmbeddings(Embeddings):
+    def embed_query(self, text: str) -> list[float]:
+        raise RuntimeError("simulated embedding outage")
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        raise RuntimeError("simulated embedding outage")
+
+
+class TestSemanticCacheFailureModes:
+    def test_fail_silently_true_returns_none_on_embedding_error(self) -> None:
+        cache = MaritacaSemanticCache(
+            embeddings=_RaisingEmbeddings(),
+            similarity_threshold=0.95,
+            max_entries=10,
+            fail_silently=True,
+        )
+        assert cache.lookup("hello", "{}") is None
+        # update() must not raise either
+        cache.update("hello", "{}", _gen("world"))
+        assert cache.lookup("hello", "{}") is None
+
+    def test_fail_silently_false_propagates_embedding_error(self) -> None:
+        cache = MaritacaSemanticCache(
+            embeddings=_RaisingEmbeddings(),
+            similarity_threshold=0.95,
+            max_entries=10,
+            fail_silently=False,
+        )
+        with pytest.raises(RuntimeError, match="simulated embedding outage"):
+            cache.update("hello", "{}", _gen("world"))
+
+    def test_invalid_threshold_raises(self) -> None:
+        with pytest.raises(ValueError, match="similarity_threshold"):
+            MaritacaSemanticCache(
+                embeddings=FakeEmbeddings(),
+                similarity_threshold=1.5,
+                max_entries=10,
+            )
+
+    def test_invalid_max_entries_raises(self) -> None:
+        with pytest.raises(ValueError, match="max_entries"):
+            MaritacaSemanticCache(
+                embeddings=FakeEmbeddings(),
+                similarity_threshold=0.95,
+                max_entries=0,
+            )
