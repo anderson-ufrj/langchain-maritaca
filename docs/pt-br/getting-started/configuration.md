@@ -26,8 +26,8 @@ modelo = ChatMaritaca()  # Usa automaticamente a variável de ambiente
 
 | Modelo | Descrição | Caso de Uso |
 |--------|-----------|-------------|
-| `sabia-3.1` | Mais capaz | Raciocínio complexo, análise |
-| `sabiazinho-3.1` | Rápido e barato | Tarefas simples, alto volume |
+| `sabia-4` | Mais capaz | Raciocínio complexo, análise |
+| `sabiazinho-4` | Rápido e barato | Tarefas simples, alto volume |
 
 ### Temperature
 
@@ -115,7 +115,7 @@ from langchain_maritaca import ChatMaritaca
 
 modelo = ChatMaritaca(
     # Seleção do modelo
-    model="sabia-3.1",
+    model="sabia-4",
 
     # Parâmetros de geração
     temperature=0.7,

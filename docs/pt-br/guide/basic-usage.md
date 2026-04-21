@@ -139,7 +139,7 @@ print(resposta.usage_metadata)
 
 # Metadados da resposta
 print(resposta.response_metadata)
-# {'model': 'sabia-3.1', 'finish_reason': 'stop'}
+# {'model': 'sabia-4', 'finish_reason': 'stop'}
 
 # ID da mensagem
 print(resposta.id)

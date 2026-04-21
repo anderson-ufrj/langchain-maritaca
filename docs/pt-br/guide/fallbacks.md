@@ -7,11 +7,11 @@
 ```python
 from langchain_maritaca import ChatMaritaca
 
-modelo = ChatMaritaca(model="sabia-3.1", temperature=0.3).with_smart_fallbacks()
+modelo = ChatMaritaca(model="sabia-4", temperature=0.3).with_smart_fallbacks()
 resposta = modelo.invoke("Explique o artigo 5 da Constituição brasileira.")
 ```
 
-A chamada tenta `sabia-3.1` primeiro e só recorre a `sabiazinho-4` e depois `sabiazinho-3.1` em falhas transientes (`429`, `502`, `503`, `504` ou timeout). Erros 4xx de autenticação/validação propagam imediatamente para que você identifique bugs de configuração.
+A chamada tenta `sabia-4` primeiro e só recorre a `sabiazinho-4` em falhas transientes (`429`, `502`, `503`, `504` ou timeout). Erros 4xx de autenticação/validação propagam imediatamente para que você identifique bugs de configuração.
 
 ## Construindo do zero
 
@@ -19,7 +19,7 @@ A chamada tenta `sabia-3.1` primeiro e só recorre a `sabiazinho-4` e depois `sa
 from langchain_maritaca import ChatMaritaca
 
 cadeia = ChatMaritaca.with_smart_fallbacks_from_primary(
-    primary="sabia-3.1",
+    primary="sabia-4",
     api_key="...",
     temperature=0.3,
 )
@@ -30,8 +30,8 @@ Todos os argumentos nomeados são passados para o `ChatMaritaca` primário e her
 ## Customizando a cadeia
 
 ```python
-modelo = ChatMaritaca(model="sabia-3.1").with_smart_fallbacks(
-    fallbacks=["sabiazinho-3.1"],
+modelo = ChatMaritaca(model="sabia-4").with_smart_fallbacks(
+    fallbacks=["sabiazinho-4"],
 )
 ```
 
@@ -40,7 +40,7 @@ Também é possível sobrescrever o filtro de exceções se precisar de comporta
 ```python
 import httpx
 
-modelo = ChatMaritaca(model="sabia-3.1").with_smart_fallbacks(
+modelo = ChatMaritaca(model="sabia-4").with_smart_fallbacks(
     exceptions_to_handle=(httpx.TimeoutException, httpx.HTTPStatusError),
 )
 ```
@@ -49,9 +49,8 @@ modelo = ChatMaritaca(model="sabia-3.1").with_smart_fallbacks(
 
 | Primário | Ordem de fallback |
 |---|---|
-| `sabia-3.1` | `sabiazinho-4` → `sabiazinho-3.1` |
-| `sabiazinho-4` | `sabia-3.1` → `sabiazinho-3.1` |
-| `sabiazinho-3.1` | `sabia-3.1` → `sabiazinho-4` |
+| `sabia-4` | `sabiazinho-4` |
+| `sabiazinho-4` | `sabia-4` |
 
 Modelos primários desconhecidos (ex.: variantes futuras do Sabiá ainda não conhecidas pelo pacote) exigem uma lista `fallbacks=[...]` explícita, caso contrário o helper levanta `ValueError` na construção.
 

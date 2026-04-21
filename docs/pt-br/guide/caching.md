@@ -65,7 +65,7 @@ As chaves de cache são geradas com base em:
 
 1. **O prompt/mensagens**: Texto exato da entrada
 2. **Parâmetros do modelo**: temperature, max_tokens, top_p, etc.
-3. **Nome do modelo**: sabia-3.1, sabiazinho-3.1, etc.
+3. **Nome do modelo**: sabia-4, sabiazinho-4, etc.
 
 Isso significa:
 

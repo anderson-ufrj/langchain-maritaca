@@ -23,9 +23,8 @@ Maritaca AI provides state-of-the-art Brazilian Portuguese language models, incl
 
 | Model | Context | Input (R$/1M) | Output (R$/1M) | Vision |
 |-------|---------|---------------|----------------|--------|
-| `sabia-3.1` | 128k | R$5.00 | R$10.00 | Yes |
+| `sabia-4` | 128k | R$5.00 | R$20.00 | Yes |
 | `sabiazinho-4` | 128k | R$1.00 | R$4.00 | Yes |
-| `sabiazinho-3.1` | 32k | R$1.00 | R$3.00 | Yes |
 
 > **Note:** All models support vision/multimodal inputs (images).
 
@@ -59,7 +58,7 @@ model = ChatMaritaca(api_key="your-api-key")
 from langchain_maritaca import ChatMaritaca
 
 model = ChatMaritaca(
-    model="sabia-3.1",
+    model="sabia-4",
     temperature=0.7,
 )
 
@@ -77,7 +76,7 @@ print(response.content)
 ```python
 from langchain_maritaca import ChatMaritaca
 
-model = ChatMaritaca(model="sabia-3.1", streaming=True)
+model = ChatMaritaca(model="sabia-4", streaming=True)
 
 for chunk in model.stream("Conte uma história sobre o folclore brasileiro"):
     print(chunk.content, end="", flush=True)
@@ -90,7 +89,7 @@ import asyncio
 from langchain_maritaca import ChatMaritaca
 
 async def main():
-    model = ChatMaritaca(model="sabia-3.1")
+    model = ChatMaritaca(model="sabia-4")
     response = await model.ainvoke("Qual é a receita de pão de queijo?")
     print(response.content)
 
@@ -103,7 +102,7 @@ asyncio.run(main())
 from langchain_maritaca import ChatMaritaca
 from langchain_core.prompts import ChatPromptTemplate
 
-model = ChatMaritaca(model="sabia-3.1")
+model = ChatMaritaca(model="sabia-4")
 
 prompt = ChatPromptTemplate.from_messages([
     ("system", "Você é um especialista em {topic}."),
@@ -130,7 +129,7 @@ def get_weather(city: str) -> str:
     """Get the current weather for a city."""
     return f"O clima em {city} está ensolarado, 25°C"
 
-model = ChatMaritaca(model="sabia-3.1")
+model = ChatMaritaca(model="sabia-4")
 model_with_tools = model.bind_tools([get_weather])
 
 response = model_with_tools.invoke("Como está o tempo em São Paulo?")
@@ -186,7 +185,7 @@ from langchain_maritaca import ChatMaritaca
 # Enable caching globally
 set_llm_cache(InMemoryCache())
 
-model = ChatMaritaca(model="sabia-3.1")
+model = ChatMaritaca(model="sabia-4")
 
 # First call - hits the API
 response1 = model.invoke("Qual é a capital do Brasil?")
@@ -204,7 +203,7 @@ Transient failures (`429`, `502`, `503`, `504`, timeouts) are routed to a curate
 ```python
 from langchain_maritaca import ChatMaritaca
 
-model = ChatMaritaca(model="sabia-3.1", temperature=0.3).with_smart_fallbacks()
+model = ChatMaritaca(model="sabia-4", temperature=0.3).with_smart_fallbacks()
 response = model.invoke("Explique o artigo 5 da Constituição brasileira.")
 ```
 
@@ -238,7 +237,7 @@ print(f"P95 latency: {latency_cb.p95_latency:.2f}s")
 from langchain_maritaca import ChatMaritaca
 from langchain_core.messages import HumanMessage
 
-model = ChatMaritaca(model="sabia-3.1")
+model = ChatMaritaca(model="sabia-4")
 
 # Count tokens in text
 tokens = model.get_num_tokens("Olá, como você está?")
@@ -280,7 +279,7 @@ Main class for interacting with Maritaca AI models.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `model` | str | `"sabia-3.1"` | Model name to use |
+| `model` | str | `"sabia-4"` | Model name to use |
 | `temperature` | float | `0.7` | Sampling temperature (0.0-2.0) |
 | `max_tokens` | int | None | Maximum tokens to generate |
 | `top_p` | float | `0.9` | Top-p sampling parameter |

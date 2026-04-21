@@ -9,9 +9,9 @@ class TestModelSpecs:
 
     def test_model_specs_defined(self) -> None:
         """Test that model specs are properly defined."""
-        assert "sabia-3.1" in MODEL_SPECS
-        assert "sabiazinho-3.1" in MODEL_SPECS
+        assert "sabia-4" in MODEL_SPECS
         assert "sabiazinho-4" in MODEL_SPECS
+        assert len(MODEL_SPECS) == 2
 
     def test_model_specs_has_required_fields(self) -> None:
         """Test that each model spec has all required fields."""
@@ -30,28 +30,17 @@ class TestModelSpecs:
                 assert field in specs, f"{model_name} missing {field}"
 
     def test_sabia_specs(self) -> None:
-        """Test sabia-3.1 specifications."""
-        specs = MODEL_SPECS["sabia-3.1"]
+        """Test sabia-4 specifications."""
+        specs = MODEL_SPECS["sabia-4"]
         assert specs["context_limit"] == 128000
         assert specs["input_cost_per_1m"] == 5.00
-        assert specs["output_cost_per_1m"] == 10.00
+        assert specs["output_cost_per_1m"] == 20.00
         assert specs["complexity"] == "high"
         assert specs["speed"] == "medium"
         assert "complex_reasoning" in specs["capabilities"]
         assert "vision" in specs["capabilities"]
 
     def test_sabiazinho_specs(self) -> None:
-        """Test sabiazinho-3.1 specifications."""
-        specs = MODEL_SPECS["sabiazinho-3.1"]
-        assert specs["context_limit"] == 32000
-        assert specs["input_cost_per_1m"] == 1.00
-        assert specs["output_cost_per_1m"] == 3.00
-        assert specs["complexity"] == "medium"
-        assert specs["speed"] == "fast"
-        assert "simple_tasks" in specs["capabilities"]
-        assert "vision" in specs["capabilities"]
-
-    def test_sabiazinho4_specs(self) -> None:
         """Test sabiazinho-4 specifications."""
         specs = MODEL_SPECS["sabiazinho-4"]
         assert specs["context_limit"] == 128000
@@ -59,6 +48,7 @@ class TestModelSpecs:
         assert specs["output_cost_per_1m"] == 4.00
         assert specs["complexity"] == "medium"
         assert specs["speed"] == "fast"
+        assert "simple_tasks" in specs["capabilities"]
         assert "vision" in specs["capabilities"]
 
 
@@ -74,9 +64,9 @@ class TestListAvailableModels:
     def test_list_available_models_contains_all_models(self) -> None:
         """Test that all defined models are returned."""
         models = ChatMaritaca.list_available_models()
-        assert "sabia-3.1" in models
-        assert "sabiazinho-3.1" in models
+        assert "sabia-4" in models
         assert "sabiazinho-4" in models
+        assert len(models) == 2
 
     def test_list_available_models_returns_copy(self) -> None:
         """Test that list_available_models returns a copy."""
@@ -103,8 +93,8 @@ class TestRecommendModel:
             task_complexity="simple",
             priority="cost",
         )
-        # Should recommend sabiazinho for cost optimization
-        assert rec["model"] == "sabiazinho-3.1"
+        # Should recommend sabiazinho-4 for cost optimization
+        assert rec["model"] == "sabiazinho-4"
         assert "cost" in rec["reason"].lower()
 
     def test_recommend_model_complex_task_quality_priority(self) -> None:
@@ -113,8 +103,8 @@ class TestRecommendModel:
             task_complexity="complex",
             priority="quality",
         )
-        # Should recommend sabia for quality
-        assert rec["model"] == "sabia-3.1"
+        # Should recommend sabia-4 for quality
+        assert rec["model"] == "sabia-4"
         assert "quality" in rec["reason"].lower()
 
     def test_recommend_model_speed_priority(self) -> None:
@@ -123,8 +113,8 @@ class TestRecommendModel:
             task_complexity="medium",
             priority="speed",
         )
-        # Should recommend sabiazinho for speed
-        assert rec["model"] == "sabiazinho-3.1"
+        # Should recommend sabiazinho-4 for speed
+        assert rec["model"] == "sabiazinho-4"
         assert "speed" in rec["reason"].lower()
 
     def test_recommend_model_with_input_length(self) -> None:
@@ -137,13 +127,13 @@ class TestRecommendModel:
         assert rec["specs"]["context_limit"] >= 5000
 
     def test_recommend_model_large_input_length(self) -> None:
-        """Test recommendation with large input length requiring larger context."""
+        """Test recommendation with large input length (both models have 128k context)."""
         rec = ChatMaritaca.recommend_model(
             task_complexity="simple",
-            input_length=10000,  # Exceeds sabiazinho's comfortable limit
+            input_length=10000,  # Both sabia-4 and sabiazinho-4 handle this comfortably
         )
-        # Should recommend sabia due to context requirements
-        assert rec["model"] == "sabia-3.1"
+        # Both models fit; default quality priority selects sabia-4
+        assert rec["model"] == "sabia-4"
 
     def test_recommend_model_extreme_input_length(self) -> None:
         """Test recommendation when input exceeds all model limits."""
@@ -151,8 +141,8 @@ class TestRecommendModel:
             task_complexity="simple",
             input_length=200000,  # Exceeds all models (max is 128k)
         )
-        # Should return sabia with truncation warning
-        assert rec["model"] == "sabia-3.1"
+        # Should return sabia-4 with truncation warning
+        assert rec["model"] == "sabia-4"
         assert "truncation" in rec["reason"].lower()
 
     def test_recommend_model_includes_alternatives(self) -> None:

@@ -72,8 +72,8 @@ print(response.content)
 
 | Model | Description | Use Case |
 |-------|-------------|----------|
-| `sabia-3.1` | Most powerful model | Complex tasks, analysis |
-| `sabiazinho-3.1` | Faster, more economical | Simple tasks, chatbots |
+| `sabia-4` | Most powerful model | Complex reasoning, analysis, long context |
+| `sabiazinho-4` | Faster, more economical | Simple tasks, chatbots, quick responses |
 
 ## Production Use Cases
 

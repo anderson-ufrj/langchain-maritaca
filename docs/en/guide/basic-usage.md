@@ -107,7 +107,7 @@ print(response.usage_metadata)
 
 # Model metadata
 print(response.response_metadata)
-# {'model': 'sabia-3.1', 'finish_reason': 'stop'}
+# {'model': 'sabia-4', 'finish_reason': 'stop'}
 ```
 
 ## Batch Processing

@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-04-21
+
+### Added
+
+- **Model Source of Truth module (`langchain_maritaca.models`)**: new
+  `MaritacaModelSpec` dataclass and helper functions
+  (`default_primary`, `canonical_fallback_order`, `active_models`,
+  `get_model`, `as_legacy_specs`, `context_limits`). All model metadata
+  (names, context windows, pricing in BRL, capabilities, fallback tiers)
+  now lives in a single file. Adding, deprecating, or reordering Maritaca
+  models is a one-file edit.
+
+### Changed
+
+- **BREAKING — default model**: `ChatMaritaca()` with no explicit `model=`
+  now resolves to `sabia-4` (was `sabia-3.1`). Users who depended on
+  `sabia-3.1` must pass it explicitly — note it is no longer in
+  `MODEL_SPECS`.
+- **BREAKING — model lineup**: `MODEL_SPECS` and `MODEL_CONTEXT_LIMITS`
+  now expose only the active Sabiá 4 family (`sabia-4`, `sabiazinho-4`).
+  Family-3 entries (`sabia-3.1`, `sabiazinho-3.1`) were removed because
+  `sabiazinho-3.1` returns HTTP 404 on the production API and
+  `sabia-3.1` is no longer on the public pricing page. Passing those
+  names as strings still goes to the API (users at their own risk).
+- **BREAKING — cost accounting**: `estimate_cost`,
+  `abatch_estimate_cost`, and `CostTrackingCallback` now return/track
+  values in **BRL** using the official Maritaca pricing, not the old
+  USD estimates. Numeric comparisons against prior cost figures will
+  differ.
+- **Canonical fallback chain**: now `sabia-4 → sabiazinho-4` (2 models).
+  Primary `sabia-4` falls back to `[sabiazinho-4]`; primary
+  `sabiazinho-4` falls back to `[sabia-4]`. Unknown primary models
+  still require an explicit `fallbacks=[...]` list.
+
+### Fixed
+
+- `sabiazinho-3.1` 404 bug: the prior default fallback chain terminated
+  on `sabiazinho-3.1` which Maritaca had already retired. In worst-case
+  cascades this would propagate a non-transient `HTTPStatusError` even
+  though the fallback wrapper was in use. Removed entirely.
+
+### Migration
+
+```python
+# Before (v0.5.x)
+model = ChatMaritaca()  # -> sabia-3.1
+
+# After (v0.6.0)
+model = ChatMaritaca()  # -> sabia-4 (pricing: R$5 input / R$20 output per 1M)
+
+# Prefer the cheaper family-4 variant explicitly:
+model = ChatMaritaca(model="sabiazinho-4")  # R$1 / R$4 per 1M
+```
+
 ## [0.5.0] - 2026-04-20
 
 ### Added

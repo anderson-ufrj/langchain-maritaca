@@ -38,14 +38,10 @@ class CostTrackingCallback(BaseCallbackHandler):
             print(f"Total tokens: {cost_callback.total_tokens}")
     """
 
-    # Maritaca AI pricing (USD per 1M tokens) - estimates, check official pricing
-    # https://www.maritaca.ai/
-    PRICING: ClassVar[dict[str, dict[str, float]]] = {
-        "sabia-3.1": {"input": 0.50, "output": 1.50},
-        "sabiazinho-3.1": {"input": 0.10, "output": 0.30},
-        # Default pricing for unknown models
-        "default": {"input": 0.50, "output": 1.50},
-    }
+    # Pricing is derived from langchain_maritaca.models (SoT, BRL per 1M).
+    # This ClassVar is kept as a compatibility surface for tests that inspect
+    # it, but the live values come from the SoT at call time.
+    PRICING: ClassVar[dict[str, dict[str, float]]] = {}
 
     def __init__(self) -> None:
         """Initialize the cost tracking callback."""
@@ -56,6 +52,21 @@ class CostTrackingCallback(BaseCallbackHandler):
         self.total_tokens: int = 0
         self.call_count: int = 0
         self._costs_by_call: list[dict[str, Any]] = []
+
+    def _pricing_for(self, model: str) -> dict[str, float]:
+        """Return BRL per-1M-token pricing for ``model``, falling back to the
+        flagship primary when the model name is unknown to the SoT.
+        """
+        from langchain_maritaca import models as maritaca_models
+
+        try:
+            spec = maritaca_models.get_model(model)
+        except KeyError:
+            spec = maritaca_models.get_model(maritaca_models.default_primary())
+        return {
+            "input": spec.input_cost_per_1m_brl,
+            "output": spec.output_cost_per_1m_brl,
+        }
 
     def on_llm_end(
         self,
@@ -75,7 +86,7 @@ class CostTrackingCallback(BaseCallbackHandler):
         total = token_usage.get("total_tokens", input_tokens + output_tokens)
 
         # Get pricing for model
-        pricing = self.PRICING.get(model, self.PRICING["default"])
+        pricing = self._pricing_for(model)
 
         # Calculate cost (pricing is per 1M tokens)
         input_cost = (input_tokens / 1_000_000) * pricing["input"]

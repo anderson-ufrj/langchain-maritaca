@@ -15,8 +15,8 @@ models = ChatMaritaca.list_available_models()
 for name, spec in models.items():
     print(f"{name}:")
     print(f"  Context: {spec['context_limit']:,} tokens")
-    print(f"  Input cost: ${spec['input_cost_per_1m']}/1M tokens")
-    print(f"  Output cost: ${spec['output_cost_per_1m']}/1M tokens")
+    print(f"  Input cost: R${spec['input_cost_per_1m']}/1M tokens")
+    print(f"  Output cost: R${spec['output_cost_per_1m']}/1M tokens")
     print(f"  Speed: {spec['speed']}")
     print(f"  Complexity: {spec['complexity']}")
 ```
@@ -25,24 +25,24 @@ for name, spec in models.items():
 
 | Model | Context | Speed | Complexity | Cost (Input/Output per 1M) |
 |-------|---------|-------|------------|---------------------------|
-| sabia-3.1 | 32,768 | Medium | High | $0.50 / $1.50 |
-| sabiazinho-3.1 | 8,192 | Fast | Medium | $0.10 / $0.30 |
+| sabia-4 | 128,000 | Medium | High | R$5.00 / R$20.00 |
+| sabiazinho-4 | 128,000 | Fast | Medium | R$1.00 / R$4.00 |
 
-### When to Use sabia-3.1
+### When to Use sabia-4
 
 - Complex reasoning tasks
 - Long document analysis
 - Multi-step problem solving
 - High-quality output is critical
-- Long conversations requiring 32K context
+- Long conversations requiring up to 128K context
 
-### When to Use sabiazinho-3.1
+### When to Use sabiazinho-4
 
 - Simple Q&A
 - Quick responses needed
 - Cost-sensitive applications
 - High-volume, simple tasks
-- Conversations under 8K tokens
+- Conversations where speed matters more than depth
 
 ## Automatic Model Recommendation
 
@@ -82,8 +82,8 @@ rec = ChatMaritaca.recommend_model(
     input_length=10000,  # 10K tokens needed
 )
 
-# Will recommend sabia-3.1 due to context requirements
-print(rec['model'])  # 'sabia-3.1'
+# Both models support 128K context; recommendation based on complexity/priority
+print(rec['model'])  # 'sabiazinho-4'
 ```
 
 ## Practical Examples
@@ -97,7 +97,7 @@ rec = ChatMaritaca.recommend_model(
     priority="cost",
 )
 
-model = ChatMaritaca(model=rec['model'])  # sabiazinho-3.1
+model = ChatMaritaca(model=rec['model'])  # sabiazinho-4
 ```
 
 ### Quality Optimization
@@ -109,7 +109,7 @@ rec = ChatMaritaca.recommend_model(
     priority="quality",
 )
 
-model = ChatMaritaca(model=rec['model'])  # sabia-3.1
+model = ChatMaritaca(model=rec['model'])  # sabia-4
 ```
 
 ### Speed Optimization
@@ -121,7 +121,7 @@ rec = ChatMaritaca.recommend_model(
     priority="speed",
 )
 
-model = ChatMaritaca(model=rec['model'])  # sabiazinho-3.1
+model = ChatMaritaca(model=rec['model'])  # sabiazinho-4
 ```
 
 ### Dynamic Selection

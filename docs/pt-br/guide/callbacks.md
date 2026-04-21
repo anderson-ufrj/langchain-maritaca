@@ -49,8 +49,8 @@ O callback usa preços estimados baseados nos preços públicos da Maritaca AI:
 
 | Modelo | Entrada (por 1M tokens) | Saída (por 1M tokens) |
 |--------|-------------------------|----------------------|
-| sabia-3.1 | $0.50 | $1.50 |
-| sabiazinho-3.1 | $0.10 | $0.30 |
+| sabia-4 | R$5,00 | R$20,00 |
+| sabiazinho-4 | R$1,00 | R$4,00 |
 
 > **Nota**: Os preços são estimativas e podem mudar. Consulte [Maritaca AI](https://www.maritaca.ai/) para preços atualizados.
 

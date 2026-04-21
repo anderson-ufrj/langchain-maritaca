@@ -12,8 +12,8 @@ Each Maritaca model has different context window sizes:
 
 | Model | Context Limit | Best For |
 |-------|---------------|----------|
-| sabia-3.1 | 32,768 tokens | Long conversations, document analysis |
-| sabiazinho-3.1 | 8,192 tokens | Quick Q&A, simple tasks |
+| sabia-4 | 128,000 tokens | Long conversations, document analysis, complex reasoning |
+| sabiazinho-4 | 128,000 tokens | Quick Q&A, simple tasks, high-volume workloads |
 
 ## Checking Context Usage
 
@@ -122,7 +122,7 @@ def chat_with_monitoring(model, messages, user_input):
 
 ### 2. Use Appropriate Models
 
-For long conversations, prefer `sabia-3.1` with its 32K context. For quick interactions, `sabiazinho-3.1` is more economical.
+Both `sabia-4` and `sabiazinho-4` support 128K context. Prefer `sabia-4` for complex reasoning tasks and `sabiazinho-4` for high-volume simple interactions.
 
 ### 3. Summarize Old Context
 

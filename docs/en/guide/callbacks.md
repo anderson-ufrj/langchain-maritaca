@@ -49,8 +49,8 @@ The callback uses estimated pricing based on Maritaca AI's public pricing:
 
 | Model | Input (per 1M tokens) | Output (per 1M tokens) |
 |-------|----------------------|------------------------|
-| sabia-3.1 | $0.50 | $1.50 |
-| sabiazinho-3.1 | $0.10 | $0.30 |
+| sabia-4 | R$5.00 | R$20.00 |
+| sabiazinho-4 | R$1.00 | R$4.00 |
 
 > **Note**: Prices are estimates and may change. Check [Maritaca AI](https://www.maritaca.ai/) for current pricing.
 

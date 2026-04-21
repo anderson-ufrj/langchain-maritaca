@@ -20,7 +20,7 @@
 
 ## O que é langchain-maritaca?
 
-**langchain-maritaca** é a integração oficial do LangChain para a [Maritaca AI](https://www.maritaca.ai/), fornecendo acesso aos modelos de linguagem otimizados para Português Brasileiro, como o **Sabiá-3.1**.
+**langchain-maritaca** é a integração oficial do LangChain para a [Maritaca AI](https://www.maritaca.ai/), fornecendo acesso aos modelos de linguagem otimizados para Português Brasileiro, como o **Sabiá-4**.
 
 Os modelos da Maritaca AI são treinados especificamente com dados em Português Brasileiro, oferecendo desempenho superior para geração, análise e compreensão de textos em português comparado a modelos multilíngues genéricos.
 
@@ -74,7 +74,7 @@ from langchain_core.messages import HumanMessage
 
 # Inicializa o modelo
 modelo = ChatMaritaca(
-    model="sabia-3.1",
+    model="sabia-4",
     temperature=0.7,
 )
 
@@ -91,8 +91,8 @@ print(resposta.content)
 
 | Modelo | Descrição | Melhor Para |
 |--------|-----------|-------------|
-| `sabia-3.1` | Modelo mais capaz | Tarefas complexas, análise, geração |
-| `sabiazinho-3.1` | Rápido e econômico | Tarefas simples, operações de alto volume |
+| `sabia-4` | Modelo mais capaz | Raciocínio complexo, análise, contexto longo |
+| `sabiazinho-4` | Rápido e econômico | Tarefas simples, chatbots, respostas rápidas |
 
 ## Pronto para Produção
 

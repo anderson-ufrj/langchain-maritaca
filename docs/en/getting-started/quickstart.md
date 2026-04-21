@@ -24,7 +24,7 @@ export MARITACA_API_KEY="your-api-key"
 ```python
 from langchain_maritaca import ChatMaritaca
 
-# Create model (uses sabia-3.1 by default)
+# Create model (uses sabia-4 by default)
 model = ChatMaritaca()
 
 # Simple call
@@ -68,7 +68,7 @@ for chunk in model.stream("Tell me a short story."):
 from langchain_maritaca import ChatMaritaca
 
 model = ChatMaritaca(
-    model="sabia-3.1",
+    model="sabia-4",
     temperature=0.7,
     max_tokens=500,
 )

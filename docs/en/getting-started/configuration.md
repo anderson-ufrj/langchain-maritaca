@@ -8,7 +8,7 @@ Complete guide to all ChatMaritaca configuration options.
 from langchain_maritaca import ChatMaritaca
 
 model = ChatMaritaca(
-    model="sabia-3.1",          # Model to use
+    model="sabia-4",            # Model to use
     temperature=0.7,            # Randomness (0.0-2.0)
     max_tokens=1000,            # Maximum response tokens
     api_key="your-key",         # API key (or env var)
@@ -23,11 +23,11 @@ Model name to use.
 
 | Value | Description |
 |-------|-------------|
-| `sabia-3.1` | Most powerful model (default) |
-| `sabiazinho-3.1` | Faster, more economical |
+| `sabia-4` | Most powerful model (default) |
+| `sabiazinho-4` | Faster, more economical |
 
 ```python
-model = ChatMaritaca(model="sabiazinho-3.1")
+model = ChatMaritaca(model="sabiazinho-4")
 ```
 
 ### temperature
@@ -168,7 +168,7 @@ model = ChatMaritaca(tool_choice="required")
 
 ```python
 model = ChatMaritaca(
-    model="sabia-3.1",
+    model="sabia-4",
     temperature=0.7,
     max_tokens=500,
 )
@@ -178,7 +178,7 @@ model = ChatMaritaca(
 
 ```python
 model = ChatMaritaca(
-    model="sabia-3.1",
+    model="sabia-4",
     temperature=0,
     max_tokens=1000,
 )
@@ -188,7 +188,7 @@ model = ChatMaritaca(
 
 ```python
 model = ChatMaritaca(
-    model="sabia-3.1",
+    model="sabia-4",
     temperature=1.2,
     top_p=0.95,
     frequency_penalty=0.5,
@@ -199,7 +199,7 @@ model = ChatMaritaca(
 
 ```python
 model = ChatMaritaca(
-    model="sabiazinho-3.1",
+    model="sabiazinho-4",
     temperature=0.5,
     max_tokens=200,
 )

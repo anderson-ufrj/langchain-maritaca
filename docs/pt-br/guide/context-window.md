@@ -12,8 +12,8 @@ Cada modelo Maritaca tem tamanhos diferentes de janela de contexto:
 
 | Modelo | Limite de Contexto | Melhor Para |
 |--------|-------------------|-------------|
-| sabia-3.1 | 32.768 tokens | Conversas longas, análise de documentos |
-| sabiazinho-3.1 | 8.192 tokens | Perguntas rápidas, tarefas simples |
+| sabia-4 | 128.000 tokens | Conversas longas, análise de documentos, raciocínio complexo |
+| sabiazinho-4 | 128.000 tokens | Perguntas rápidas, tarefas simples, alto volume |
 
 ## Verificando Uso do Contexto
 
@@ -122,7 +122,7 @@ def chat_com_monitoramento(model, messages, entrada_usuario):
 
 ### 2. Usar Modelos Apropriados
 
-Para conversas longas, prefira `sabia-3.1` com seu contexto de 32K. Para interações rápidas, `sabiazinho-3.1` é mais econômico.
+Tanto `sabia-4` quanto `sabiazinho-4` suportam 128K de contexto. Prefira `sabia-4` para tarefas de raciocínio complexo e `sabiazinho-4` para interações simples de alto volume.
 
 ### 3. Resumir Contexto Antigo
 

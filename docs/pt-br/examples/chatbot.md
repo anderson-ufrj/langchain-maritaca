@@ -15,7 +15,7 @@ class ChatBot:
     def __init__(
         self,
         system_prompt: str = "Você é um assistente prestativo.",
-        model: str = "sabia-3.1",
+        model: str = "sabia-4",
         max_history: int = 10,
     ):
         self.modelo = ChatMaritaca(model=model, temperature=0.7)
@@ -207,7 +207,7 @@ def responder(mensagem, historico):
 demo = gr.ChatInterface(
     responder,
     title="ChatBot Maritaca",
-    description="Chat com o modelo Sabiá-3.1 da Maritaca AI",
+    description="Chat com o modelo Sabiá-4 da Maritaca AI",
     theme="soft",
 )
 
