@@ -7,6 +7,7 @@ Location: Minas Gerais, Brasil
 GitHub: https://github.com/anderson-ufrj
 """
 
+from langchain_maritaca.cache import MaritacaSemanticCache
 from langchain_maritaca.callbacks import (
     CombinedCallback,
     CostTrackingCallback,
@@ -23,6 +24,7 @@ __all__ = [
     "CostTrackingCallback",
     "DeepInfraEmbeddings",
     "LatencyTrackingCallback",
+    "MaritacaSemanticCache",
     "TokenStreamingCallback",
     "__version__",
 ]

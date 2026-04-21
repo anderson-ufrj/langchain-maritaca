@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-04-20
+
+### Added
+
+- **Smart Fallback Chain**: new `ChatMaritaca.with_smart_fallbacks()` instance
+  method and `ChatMaritaca.with_smart_fallbacks_from_primary()` classmethod.
+  Build a pre-wired Sabiá fallback chain
+  (`sabia-3.1 → sabiazinho-4 → sabiazinho-3.1` by default) that triggers on
+  transient errors only (`429`, `502`, `503`, `504`, timeouts). Non-transient
+  failures such as `401`/`403`/`422` propagate immediately.
+- **MaritacaSemanticCache**: LangChain `BaseCache` implementation that matches
+  prompts by cosine similarity over embeddings. Scoped per `llm_string` so
+  entries never cross model or config boundaries. Configurable
+  `similarity_threshold`, `max_entries` (LRU), and `fail_silently` behavior.
+  Works out of the box with `DeepInfraEmbeddings`.
+
+### Changed
+
+- `numpy>=1.24,<3.0` is now a required dependency. It backs the semantic
+  cache's vectorized cosine similarity; in practice numpy was already
+  transitively present in most LangChain environments.
+
 ## [0.4.0] - 2026-01-10
 
 ### Added

@@ -104,6 +104,47 @@ MODEL_SPECS: dict[str, dict[str, Any]] = {
     },
 }
 
+# Canonical fallback ordering across the Sabiá family. Used when callers do not
+# supply their own fallback list in with_smart_fallbacks(). Order reflects a
+# capability-then-recency heuristic, so fallbacks preserve quality first and
+# cost/latency second.
+_CANONICAL_FALLBACK_ORDER: tuple[str, ...] = (
+    "sabia-3.1",
+    "sabiazinho-4",
+    "sabiazinho-3.1",
+)
+
+
+def _default_fallback_chain(primary: str) -> list[str]:
+    """Return the canonical fallback model order for a given primary.
+
+    Unknown primary models return an empty list so callers get a clear signal
+    (and a DRY-safe config error at the ChatMaritaca level) instead of a
+    silent no-op.
+    """
+    if primary not in _CANONICAL_FALLBACK_ORDER:
+        return []
+    return [m for m in _CANONICAL_FALLBACK_ORDER if m != primary]
+
+
+_TRANSIENT_STATUS_CODES: frozenset[int] = frozenset({429, 502, 503, 504})
+
+
+class _TransientHTTPStatusError(httpx.HTTPStatusError):
+    """HTTPStatusError subclass carrying only transient (fallback-worthy) errors.
+
+    The base class is still raised for anything else, so callers without a
+    fallback wrapper see the canonical exception type. This subclass lets
+    with_smart_fallbacks() filter precisely without a brittle inspection of
+    response.status_code inside LangChain's fallback machinery.
+    """
+
+
+_DEFAULT_FALLBACK_EXCEPTIONS: tuple[type[BaseException], ...] = (
+    httpx.TimeoutException,
+    _TransientHTTPStatusError,
+)
+
 
 class ChatMaritaca(BaseChatModel):
     r"""Maritaca AI Chat large language models API.
@@ -426,6 +467,88 @@ class ChatMaritaca(BaseChatModel):
         formatted_tools = [convert_to_openai_tool(tool) for tool in tools]
         return self.bind(tools=formatted_tools, tool_choice=tool_choice, **kwargs)
 
+    @classmethod
+    def with_smart_fallbacks_from_primary(
+        cls,
+        primary: str,
+        *,
+        fallbacks: list[str] | None = None,
+        exceptions_to_handle: tuple[type[BaseException], ...] | None = None,
+        **kwargs: Any,
+    ) -> Runnable[Any, BaseMessage]:
+        """Build a ChatMaritaca with ``model=primary`` and wrap it in fallbacks.
+
+        Args:
+            primary: Model name for the primary ChatMaritaca.
+            fallbacks: Optional explicit fallback model names.
+            exceptions_to_handle: Optional transient-error override.
+            **kwargs: Passed through to ``ChatMaritaca(...)`` for the primary
+                (and therefore inherited by the sibling fallback models).
+        """
+        primary_model = cls(model=primary, **kwargs)  # type: ignore[call-arg]
+        return primary_model.with_smart_fallbacks(
+            fallbacks=fallbacks,
+            exceptions_to_handle=exceptions_to_handle,
+        )
+
+    def with_smart_fallbacks(
+        self,
+        fallbacks: list[str] | None = None,
+        *,
+        exceptions_to_handle: tuple[type[BaseException], ...] | None = None,
+    ) -> Runnable[Any, BaseMessage]:
+        """Wrap this model in a pre-configured fallback chain.
+
+        Creates sibling ChatMaritaca instances that share all of this model's
+        config (api key, temperature, max_tokens, callbacks, retry_*), varying
+        only the ``model`` attribute. Returns a ``RunnableWithFallbacks`` that
+        tries them in order on transient errors only.
+
+        Args:
+            fallbacks: Optional explicit list of Maritaca model names. When
+                omitted, the canonical Sabiá fallback order is used (excluding
+                the current primary). Raises ``ValueError`` if no default chain
+                is known for this primary.
+            exceptions_to_handle: Override the default transient-error filter.
+                By default, only ``httpx.TimeoutException`` and
+                ``httpx.HTTPStatusError`` trigger a fallback. Task 5 narrows
+                this to only transient status codes.
+
+        Returns:
+            A Runnable behaving like this model but falling back on transient
+            failures.
+        """
+        effective_fallbacks = (
+            fallbacks
+            if fallbacks is not None
+            else _default_fallback_chain(self.model_name)
+        )
+        if not effective_fallbacks:
+            msg = (
+                f"ChatMaritaca.with_smart_fallbacks: no default fallback chain "
+                f"is defined for primary model {self.model_name!r}. Pass an "
+                f"explicit `fallbacks=[...]` list."
+            )
+            raise ValueError(msg)
+
+        for name in effective_fallbacks:
+            if name not in MODEL_SPECS:
+                msg = (
+                    f"ChatMaritaca.with_smart_fallbacks: unknown model "
+                    f"{name!r}. Known models: {sorted(MODEL_SPECS)}."
+                )
+                raise ValueError(msg)
+
+        siblings = [
+            self.model_copy(update={"model_name": name}) for name in effective_fallbacks
+        ]
+        filter_: tuple[type[BaseException], ...] = (
+            exceptions_to_handle
+            if exceptions_to_handle is not None
+            else _DEFAULT_FALLBACK_EXCEPTIONS
+        )
+        return self.with_fallbacks(siblings, exceptions_to_handle=filter_)
+
     def with_structured_output(
         self,
         schema: dict[str, Any] | type[BaseModel] | None = None,
@@ -722,6 +845,10 @@ class ChatMaritaca(BaseChatModel):
                     )
                     time.sleep(retry_after)
                     continue
+                if e.response.status_code in _TRANSIENT_STATUS_CODES:
+                    raise _TransientHTTPStatusError(
+                        str(e), request=e.request, response=e.response
+                    ) from e
                 raise
             except httpx.TimeoutException:
                 if attempt < self.max_retries:
@@ -753,6 +880,10 @@ class ChatMaritaca(BaseChatModel):
                     )
                     await asyncio.sleep(retry_after)
                     continue
+                if e.response.status_code in _TRANSIENT_STATUS_CODES:
+                    raise _TransientHTTPStatusError(
+                        str(e), request=e.request, response=e.response
+                    ) from e
                 raise
             except httpx.TimeoutException:
                 if attempt < self.max_retries:

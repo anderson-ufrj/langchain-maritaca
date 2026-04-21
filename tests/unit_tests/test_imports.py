@@ -17,3 +17,9 @@ def test_version_import() -> None:
     """Test that version can be imported."""
     assert __version__ is not None
     assert isinstance(__version__, str)
+
+
+def test_maritaca_semantic_cache_importable() -> None:
+    from langchain_maritaca import MaritacaSemanticCache
+
+    assert MaritacaSemanticCache.__name__ == "MaritacaSemanticCache"
