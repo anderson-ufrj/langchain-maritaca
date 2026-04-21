@@ -131,9 +131,12 @@ class MaritacaSemanticCache(BaseCache):
             self._store.clear()
 
     async def alookup(self, prompt: str, llm_string: str) -> RETURN_VAL_TYPE | None:
-        return None  # Implemented in Task 10.
+        # Delegate to sync. The embedding call and numpy work are CPU/IO-bound
+        # but already fast; the lock keeps thread safety. Subclasses can
+        # override if they need to back off to aembed_query.
+        return self.lookup(prompt, llm_string)
 
     async def aupdate(
         self, prompt: str, llm_string: str, return_val: RETURN_VAL_TYPE
     ) -> None:
-        return None  # Implemented in Task 10.
+        self.update(prompt, llm_string, return_val)

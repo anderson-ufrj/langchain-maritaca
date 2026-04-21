@@ -195,3 +195,23 @@ class TestSemanticCacheFailureModes:
                 similarity_threshold=0.95,
                 max_entries=0,
             )
+
+
+class TestSemanticCacheAsync:
+    async def test_aupdate_then_alookup_hits(self) -> None:
+        emb = FakeEmbeddings(mapping={"hello": [1.0, 0.0, 0.0, 0.0]})
+        cache = MaritacaSemanticCache(
+            embeddings=emb, similarity_threshold=0.95, max_entries=10
+        )
+        await cache.aupdate("hello", "{}", _gen("world"))
+        result = await cache.alookup("hello", "{}")
+        assert result is not None
+        assert result[0].message.content == "world"  # type: ignore[union-attr]
+
+    async def test_alookup_empty_returns_none(self) -> None:
+        cache = MaritacaSemanticCache(
+            embeddings=FakeEmbeddings(),
+            similarity_threshold=0.95,
+            max_entries=10,
+        )
+        assert await cache.alookup("nothing", "{}") is None
