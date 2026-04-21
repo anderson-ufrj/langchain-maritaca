@@ -195,6 +195,21 @@ response1 = model.invoke("Qual é a capital do Brasil?")
 response2 = model.invoke("Qual é a capital do Brasil?")
 ```
 
+For fuzzy matching (paraphrases hit the same cache entry), see the [Semantic Cache guide](docs/en/guide/semantic-cache.md).
+
+### With Smart Fallbacks
+
+Transient failures (`429`, `502`, `503`, `504`, timeouts) are routed to a curated Sabiá fallback chain. Non-transient errors (`401`, `403`, `422`) propagate unchanged.
+
+```python
+from langchain_maritaca import ChatMaritaca
+
+model = ChatMaritaca(model="sabia-3.1", temperature=0.3).with_smart_fallbacks()
+response = model.invoke("Explique o artigo 5 da Constituição brasileira.")
+```
+
+See the [Smart Fallbacks guide](docs/en/guide/fallbacks.md) for the full default chain and customization.
+
 ### With Callbacks for Observability
 
 ```python
