@@ -100,3 +100,49 @@ class TestSemanticCacheLookupAndUpdate:
         cache.update("hello", "{}", _gen("world"))
         cache.clear()
         assert cache.lookup("hello", "{}") is None
+
+
+class TestSemanticCacheLRU:
+    def test_oldest_entry_is_evicted_when_max_entries_exceeded(self) -> None:
+        emb = FakeEmbeddings(
+            mapping={
+                "one": [1.0, 0.0, 0.0, 0.0],
+                "two": [0.0, 1.0, 0.0, 0.0],
+                "three": [0.0, 0.0, 1.0, 0.0],
+            }
+        )
+        cache = MaritacaSemanticCache(
+            embeddings=emb, similarity_threshold=0.95, max_entries=2
+        )
+        cache.update("one", "{}", _gen("g-one"))
+        cache.update("two", "{}", _gen("g-two"))
+        cache.update("three", "{}", _gen("g-three"))  # evicts "one"
+
+        assert cache.lookup("one", "{}") is None
+        result_two = cache.lookup("two", "{}")
+        result_three = cache.lookup("three", "{}")
+        assert result_two is not None
+        assert result_two[0].message.content == "g-two"  # type: ignore[union-attr]
+        assert result_three is not None
+        assert result_three[0].message.content == "g-three"  # type: ignore[union-attr]
+
+    def test_hit_bumps_entry_and_protects_it_from_eviction(self) -> None:
+        emb = FakeEmbeddings(
+            mapping={
+                "one": [1.0, 0.0, 0.0, 0.0],
+                "two": [0.0, 1.0, 0.0, 0.0],
+                "three": [0.0, 0.0, 1.0, 0.0],
+            }
+        )
+        cache = MaritacaSemanticCache(
+            embeddings=emb, similarity_threshold=0.95, max_entries=2
+        )
+        cache.update("one", "{}", _gen("g-one"))
+        cache.update("two", "{}", _gen("g-two"))
+        # Touch "one" so it moves to the LRU head
+        assert cache.lookup("one", "{}") is not None
+        cache.update("three", "{}", _gen("g-three"))  # should evict "two"
+
+        assert cache.lookup("two", "{}") is None
+        assert cache.lookup("one", "{}") is not None
+        assert cache.lookup("three", "{}") is not None
