@@ -65,11 +65,66 @@ class MaritacaSemanticCache(BaseCache):
         ] = {}
         self._lock = threading.Lock()
 
+    def _embed(self, prompt: str) -> np.ndarray | None:
+        try:
+            vec = np.asarray(self.embeddings.embed_query(prompt), dtype=np.float32)
+        except Exception:
+            if self.fail_silently:
+                logger.warning(
+                    "MaritacaSemanticCache embedding failed; treating as miss.",
+                    exc_info=True,
+                )
+                return None
+            raise
+        return vec
+
+    def _cosine(self, query: np.ndarray, matrix: np.ndarray) -> np.ndarray:
+        # matrix: shape (n, d); query: shape (d,)
+        query_norm = np.linalg.norm(query)
+        if query_norm == 0:
+            return np.zeros(matrix.shape[0], dtype=np.float32)
+        matrix_norms = np.linalg.norm(matrix, axis=1)
+        # Avoid division by zero for all-zero rows
+        safe = matrix_norms > 0
+        scores = np.zeros(matrix.shape[0], dtype=np.float32)
+        scores[safe] = (matrix[safe] @ query) / (matrix_norms[safe] * query_norm)
+        return scores
+
     def lookup(self, prompt: str, llm_string: str) -> RETURN_VAL_TYPE | None:
-        return None  # Implemented in Task 7.
+        with self._lock:
+            bucket = self._store.get(llm_string)
+            if not bucket:
+                return None
+
+            query_vec = self._embed(prompt)
+            if query_vec is None:
+                return None
+
+            prompts = list(bucket.keys())
+            matrix = np.stack([bucket[p][0] for p in prompts])
+            scores = self._cosine(query_vec, matrix)
+            best_idx = int(np.argmax(scores))
+            if float(scores[best_idx]) < self.similarity_threshold:
+                return None
+
+            best_prompt = prompts[best_idx]
+            entry = bucket.pop(best_prompt)
+            bucket[best_prompt] = entry  # LRU bump
+            return entry[1]
 
     def update(self, prompt: str, llm_string: str, return_val: RETURN_VAL_TYPE) -> None:
-        return None  # Implemented in Task 7.
+        with self._lock:
+            query_vec = self._embed(prompt)
+            if query_vec is None:
+                return
+
+            bucket = self._store.setdefault(llm_string, OrderedDict())
+            if prompt in bucket:
+                bucket.pop(prompt)
+            bucket[prompt] = (query_vec, return_val)
+            # LRU eviction; Task 8 verifies the boundary
+            while len(bucket) > self.max_entries:
+                bucket.popitem(last=False)
 
     def clear(self, **kwargs: Any) -> None:
         with self._lock:
