@@ -4,8 +4,8 @@
 [![Python](https://img.shields.io/pypi/pyversions/langchain-maritaca.svg)](https://pypi.org/project/langchain-maritaca/)
 [![Downloads](https://img.shields.io/pypi/dm/langchain-maritaca.svg)](https://pypi.org/project/langchain-maritaca/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/anderson-ufrj/langchain-maritaca/actions/workflows/ci.yml/badge.svg)](https://github.com/anderson-ufrj/langchain-maritaca/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/anderson-ufrj/langchain-maritaca/graph/badge.svg)](https://codecov.io/gh/anderson-ufrj/langchain-maritaca)
+[![CI](https://github.com/anderson-ntlabs/langchain-maritaca/actions/workflows/ci.yml/badge.svg)](https://github.com/anderson-ntlabs/langchain-maritaca/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/anderson-ntlabs/langchain-maritaca/graph/badge.svg)](https://codecov.io/gh/anderson-ntlabs/langchain-maritaca)
 
 [🇺🇸 Read in English](README.md)
 
@@ -13,7 +13,7 @@ Pacote de integração conectando [Maritaca AI](https://www.maritaca.ai/) e [Lan
 
 **Autor:** Anderson Henrique da Silva
 **Localização:** Minas Gerais, Brasil
-**GitHub:** [anderson-ufrj](https://github.com/anderson-ufrj)
+**GitHub:** [anderson-ntlabs](https://github.com/anderson-ntlabs)
 
 ## Visão Geral
 
@@ -298,10 +298,10 @@ Os modelos da Maritaca AI são especificamente treinados para Português Brasile
 
 **[Cidadão.AI](https://cidadao-ai-frontend.vercel.app/pt)** - Plataforma brasileira de transparência governamental alimentada por agentes de IA, processando mais de 331K requisições/mês.
 
-- Frontend: [github.com/anderson-ufrj/cidadao.ai-frontend](https://github.com/anderson-ufrj/cidadao.ai-frontend)
-- Backend: [github.com/anderson-ufrj/cidadao.ai-backend](https://github.com/anderson-ufrj/cidadao.ai-backend)
+- Frontend: [github.com/anderson-ntlabs/cidadao.ai-frontend](https://github.com/anderson-ntlabs/cidadao.ai-frontend)
+- Backend: [github.com/anderson-ntlabs/cidadao.ai-backend](https://github.com/anderson-ntlabs/cidadao.ai-backend)
 
-> *Usando este pacote em produção? [Abra uma issue](https://github.com/anderson-ufrj/langchain-maritaca/issues) para ser destacado!*
+> *Usando este pacote em produção? [Abra uma issue](https://github.com/anderson-ntlabs/langchain-maritaca/issues) para ser destacado!*
 
 ## Referência da API
 
@@ -345,7 +345,7 @@ Classe para gerar embeddings usando DeepInfra (recomendado pela Maritaca AI).
 
 ```bash
 # Clone o repositório
-git clone https://github.com/anderson-ufrj/langchain-maritaca.git
+git clone https://github.com/anderson-ntlabs/langchain-maritaca.git
 cd langchain-maritaca
 
 # Instale as dependências

@@ -299,7 +299,7 @@ response = model.invoke([
 
 **Status:** In progress (commit local, pendente PR)
 **Target repo:** `langchain-ai/langchain-community`
-**Fork:** `anderson-ufrj/langchain-community`
+**Fork:** `anderson-ntlabs/langchain-community`
 **Branch:** `feat/update-maritalk-chat-model`
 
 ### Context

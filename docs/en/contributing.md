@@ -7,7 +7,7 @@ Thank you for your interest in contributing to langchain-maritaca!
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/anderson-ufrj/langchain-maritaca.git
+git clone https://github.com/anderson-ntlabs/langchain-maritaca.git
 cd langchain-maritaca
 ```
 

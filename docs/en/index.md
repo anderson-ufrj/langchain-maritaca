@@ -85,7 +85,7 @@ print(response.content)
 
     Multi-agent transparency platform for fighting corruption in Brazil. Uses Maritaca AI as the primary LLM.
 
-    [:octicons-arrow-right-24: cidadao.ai](https://github.com/anderson-ufrj/cidadao.ai-backend)
+    [:octicons-arrow-right-24: cidadao.ai](https://github.com/anderson-ntlabs/cidadao.ai-backend)
 
 </div>
 

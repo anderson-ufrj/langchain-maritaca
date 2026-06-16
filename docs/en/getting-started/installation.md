@@ -26,7 +26,7 @@ poetry add langchain-maritaca
 ## Installation from source
 
 ```bash
-git clone https://github.com/anderson-ufrj/langchain-maritaca.git
+git clone https://github.com/anderson-ntlabs/langchain-maritaca.git
 cd langchain-maritaca
 pip install -e .
 ```

@@ -11,8 +11,8 @@
   <a href="https://pypi.org/project/langchain-maritaca/">
     <img src="https://img.shields.io/pypi/pyversions/langchain-maritaca.svg" alt="Versões Python">
   </a>
-  <a href="https://github.com/anderson-ufrj/langchain-maritaca/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/anderson-ufrj/langchain-maritaca.svg" alt="Licença">
+  <a href="https://github.com/anderson-ntlabs/langchain-maritaca/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/anderson-ntlabs/langchain-maritaca.svg" alt="Licença">
   </a>
 </p>
 

@@ -4,8 +4,8 @@
 [![Python](https://img.shields.io/pypi/pyversions/langchain-maritaca.svg)](https://pypi.org/project/langchain-maritaca/)
 [![Downloads](https://img.shields.io/pypi/dm/langchain-maritaca.svg)](https://pypi.org/project/langchain-maritaca/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/anderson-ufrj/langchain-maritaca/actions/workflows/ci.yml/badge.svg)](https://github.com/anderson-ufrj/langchain-maritaca/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/anderson-ufrj/langchain-maritaca/graph/badge.svg)](https://codecov.io/gh/anderson-ufrj/langchain-maritaca)
+[![CI](https://github.com/anderson-ntlabs/langchain-maritaca/actions/workflows/ci.yml/badge.svg)](https://github.com/anderson-ntlabs/langchain-maritaca/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/anderson-ntlabs/langchain-maritaca/graph/badge.svg)](https://codecov.io/gh/anderson-ntlabs/langchain-maritaca)
 
 [🇧🇷 Leia em Português](README.pt-br.md)
 
@@ -13,7 +13,7 @@ An integration package connecting [Maritaca AI](https://www.maritaca.ai/) and [L
 
 **Author:** Anderson Henrique da Silva
 **Location:** Minas Gerais, Brasil
-**GitHub:** [anderson-ufrj](https://github.com/anderson-ufrj)
+**GitHub:** [anderson-ntlabs](https://github.com/anderson-ntlabs)
 
 ## Overview
 
@@ -264,10 +264,10 @@ Maritaca AI models are specifically trained for Brazilian Portuguese, offering:
 
 **[Cidadão.AI](https://cidadao-ai-frontend.vercel.app/pt)** - Brazilian government transparency platform powered by AI agents, handling 331K+ requests/month.
 
-- Frontend: [github.com/anderson-ufrj/cidadao.ai-frontend](https://github.com/anderson-ufrj/cidadao.ai-frontend)
-- Backend: [github.com/anderson-ufrj/cidadao.ai-backend](https://github.com/anderson-ufrj/cidadao.ai-backend)
+- Frontend: [github.com/anderson-ntlabs/cidadao.ai-frontend](https://github.com/anderson-ntlabs/cidadao.ai-frontend)
+- Backend: [github.com/anderson-ntlabs/cidadao.ai-backend](https://github.com/anderson-ntlabs/cidadao.ai-backend)
 
-> *Using this package in production? [Open an issue](https://github.com/anderson-ufrj/langchain-maritaca/issues) to get featured!*
+> *Using this package in production? [Open an issue](https://github.com/anderson-ntlabs/langchain-maritaca/issues) to get featured!*
 
 ## API Reference
 
@@ -299,7 +299,7 @@ Main class for interacting with Maritaca AI models.
 
 ```bash
 # Clone the repository
-git clone https://github.com/anderson-ufrj/langchain-maritaca.git
+git clone https://github.com/anderson-ntlabs/langchain-maritaca.git
 cd langchain-maritaca
 
 # Install dependencies
