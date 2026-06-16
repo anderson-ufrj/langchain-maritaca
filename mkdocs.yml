@@ -1,10 +1,10 @@
 site_name: langchain-maritaca
 site_description: Integração LangChain para Maritaca AI - Modelos de linguagem otimizados para Português Brasileiro
 site_author: Anderson Henrique da Silva
-site_url: https://anderson-ufrj.github.io/langchain-maritaca
+site_url: https://anderson-ntlabs.github.io/langchain-maritaca
 
-repo_name: anderson-ufrj/langchain-maritaca
-repo_url: https://github.com/anderson-ufrj/langchain-maritaca
+repo_name: anderson-ntlabs/langchain-maritaca
+repo_url: https://github.com/anderson-ntlabs/langchain-maritaca
 
 theme:
   name: material
@@ -112,7 +112,7 @@ extra:
       lang: en
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/anderson-ufrj
+      link: https://github.com/anderson-ntlabs
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/langchain-maritaca/
 

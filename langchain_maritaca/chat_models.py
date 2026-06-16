@@ -5,7 +5,7 @@ including the Sabiá family of models.
 
 Author: Anderson Henrique da Silva
 Location: Minas Gerais, Brasil
-GitHub: https://github.com/anderson-ufrj
+GitHub: https://github.com/anderson-ntlabs
 """
 
 from __future__ import annotations
