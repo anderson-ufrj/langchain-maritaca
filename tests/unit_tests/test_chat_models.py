@@ -2,7 +2,7 @@
 
 Author: Anderson Henrique da Silva
 Location: Minas Gerais, Brasil
-GitHub: https://github.com/anderson-ufrj
+GitHub: https://github.com/anderson-ntlabs
 """
 
 import os
@@ -31,7 +31,7 @@ class TestChatMaritaca:
         """Test default initialization."""
         with patch.dict("os.environ", {"MARITACA_API_KEY": "test-key"}):
             model = ChatMaritaca()
-            assert model.model_name == "sabia-3.1"
+            assert model.model_name == "sabia-4"
             assert model.temperature == 0.7
             assert model.max_retries == 2
 
@@ -39,12 +39,12 @@ class TestChatMaritaca:
         """Test initialization with custom parameters."""
         model = ChatMaritaca(
             api_key="test-key",  # type: ignore[arg-type]
-            model="sabiazinho-3.1",
+            model="sabiazinho-4",
             temperature=0.5,
             max_tokens=1000,
             max_retries=3,
         )
-        assert model.model_name == "sabiazinho-3.1"
+        assert model.model_name == "sabiazinho-4"
         assert model.temperature == 0.5
         assert model.max_tokens == 1000
         assert model.max_retries == 3
@@ -53,7 +53,7 @@ class TestChatMaritaca:
         """Test initialization using parameter aliases."""
         model = ChatMaritaca(
             api_key="test-key",  # type: ignore[arg-type]
-            model="sabia-3.1",
+            model="sabia-4",
             timeout=30.0,
             base_url="https://custom.api.com",
         )
@@ -78,13 +78,13 @@ class TestChatMaritaca:
         """Test _default_params property."""
         model = ChatMaritaca(
             api_key="test-key",  # type: ignore[arg-type]
-            model="sabia-3.1",
+            model="sabia-4",
             temperature=0.8,
             max_tokens=500,
             top_p=0.95,
         )
         params = model._default_params
-        assert params["model"] == "sabia-3.1"
+        assert params["model"] == "sabia-4"
         assert params["temperature"] == 0.8
         assert params["max_tokens"] == 500
         assert params["top_p"] == 0.95
@@ -183,7 +183,7 @@ class TestChatMaritacaIntegration:
             "id": "chatcmpl-123",
             "object": "chat.completion",
             "created": 1234567890,
-            "model": "sabia-3.1",
+            "model": "sabia-4",
             "choices": [
                 {
                     "index": 0,
@@ -231,7 +231,7 @@ class TestChatMaritacaIntegration:
         expected_content = "A capital do Brasil é Brasília."
         assert result.generations[0].message.content == expected_content
         assert result.llm_output is not None
-        assert result.llm_output["model"] == "sabia-3.1"
+        assert result.llm_output["model"] == "sabia-4"
         assert result.llm_output["token_usage"]["total_tokens"] == 25
 
     def test_create_message_dicts(self) -> None:
@@ -257,7 +257,7 @@ class TestChatMaritacaLangSmith:
         """Test _get_ls_params method."""
         model = ChatMaritaca(
             api_key="test-key",  # type: ignore[arg-type]
-            model="sabia-3.1",
+            model="sabia-4",
             temperature=0.5,
             max_tokens=100,
         )
@@ -265,7 +265,7 @@ class TestChatMaritacaLangSmith:
         ls_params = model._get_ls_params(stop=["END"])
 
         assert ls_params["ls_provider"] == "maritaca"
-        assert ls_params["ls_model_name"] == "sabia-3.1"
+        assert ls_params["ls_model_name"] == "sabia-4"
         assert ls_params["ls_model_type"] == "chat"
         assert ls_params["ls_temperature"] == 0.5
         assert ls_params["ls_max_tokens"] == 100
@@ -425,7 +425,7 @@ class TestToolCalling:
         model = ChatMaritaca(api_key="test-key")  # type: ignore[arg-type]
         response = {
             "id": "chatcmpl-123",
-            "model": "sabia-3.1",
+            "model": "sabia-4",
             "choices": [
                 {
                     "index": 0,
@@ -734,7 +734,7 @@ class TestCaching:
             "id": "chatcmpl-cache-test",
             "object": "chat.completion",
             "created": 1234567890,
-            "model": "sabia-3.1",
+            "model": "sabia-4",
             "choices": [
                 {
                     "index": 0,

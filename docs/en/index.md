@@ -72,8 +72,8 @@ print(response.content)
 
 | Model | Description | Use Case |
 |-------|-------------|----------|
-| `sabia-3.1` | Most powerful model | Complex tasks, analysis |
-| `sabiazinho-3.1` | Faster, more economical | Simple tasks, chatbots |
+| `sabia-4` | Most powerful model | Complex reasoning, analysis, long context |
+| `sabiazinho-4` | Faster, more economical | Simple tasks, chatbots, quick responses |
 
 ## Production Use Cases
 
@@ -85,7 +85,7 @@ print(response.content)
 
     Multi-agent transparency platform for fighting corruption in Brazil. Uses Maritaca AI as the primary LLM.
 
-    [:octicons-arrow-right-24: cidadao.ai](https://github.com/anderson-ufrj/cidadao.ai-backend)
+    [:octicons-arrow-right-24: cidadao.ai](https://github.com/anderson-ntlabs/cidadao.ai-backend)
 
 </div>
 

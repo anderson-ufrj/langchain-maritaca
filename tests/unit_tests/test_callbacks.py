@@ -2,7 +2,7 @@
 
 Author: Anderson Henrique da Silva
 Location: Minas Gerais, Brasil
-GitHub: https://github.com/anderson-ufrj
+GitHub: https://github.com/anderson-ntlabs
 """
 
 from unittest.mock import MagicMock, patch
@@ -34,7 +34,7 @@ class TestCostTrackingCallback:
         return LLMResult(
             generations=[[ChatGeneration(message=AIMessage(content="Hello!"))]],
             llm_output={
-                "model": "sabia-3.1",
+                "model": "sabia-4",
                 "token_usage": {
                     "prompt_tokens": 100,
                     "completion_tokens": 50,
@@ -63,10 +63,10 @@ class TestCostTrackingCallback:
         assert callback.total_tokens == 150
         assert callback.call_count == 1
 
-        # Calculate expected cost for sabia-3.1
-        # Input: 100 tokens * $0.50/1M = $0.00005
-        # Output: 50 tokens * $1.50/1M = $0.000075
-        expected_cost = (100 / 1_000_000) * 0.50 + (50 / 1_000_000) * 1.50
+        # Calculate expected cost for sabia-4 (BRL)
+        # Input: 100 tokens * R$5.00/1M = R$0.0005
+        # Output: 50 tokens * R$20.00/1M = R$0.001
+        expected_cost = (100 / 1_000_000) * 5.00 + (50 / 1_000_000) * 20.00
         assert callback.total_cost == pytest.approx(expected_cost)
 
     def test_on_llm_end_accumulates(
@@ -111,7 +111,7 @@ class TestCostTrackingCallback:
     def test_default_pricing_for_unknown_model(
         self, callback: CostTrackingCallback
     ) -> None:
-        """Test that unknown models use default pricing."""
+        """Test that unknown models fall back to flagship (sabia-4) pricing."""
         result = LLMResult(
             generations=[[ChatGeneration(message=AIMessage(content="Hello!"))]],
             llm_output={
@@ -125,16 +125,16 @@ class TestCostTrackingCallback:
         )
         callback.on_llm_end(result, run_id=uuid4())
 
-        # Should use default pricing
-        expected_cost = (100 / 1_000_000) * 0.50 + (50 / 1_000_000) * 1.50
+        # Should use sabia-4 pricing as fallback (BRL)
+        expected_cost = (100 / 1_000_000) * 5.00 + (50 / 1_000_000) * 20.00
         assert callback.total_cost == pytest.approx(expected_cost)
 
     def test_sabiazinho_pricing(self, callback: CostTrackingCallback) -> None:
-        """Test pricing for sabiazinho-3.1 model."""
+        """Test pricing for sabiazinho-4 model."""
         result = LLMResult(
             generations=[[ChatGeneration(message=AIMessage(content="Hello!"))]],
             llm_output={
-                "model": "sabiazinho-3.1",
+                "model": "sabiazinho-4",
                 "token_usage": {
                     "prompt_tokens": 100,
                     "completion_tokens": 50,
@@ -144,8 +144,8 @@ class TestCostTrackingCallback:
         )
         callback.on_llm_end(result, run_id=uuid4())
 
-        # sabiazinho pricing: input $0.10/1M, output $0.30/1M
-        expected_cost = (100 / 1_000_000) * 0.10 + (50 / 1_000_000) * 0.30
+        # sabiazinho-4 pricing (BRL): input R$1.00/1M, output R$4.00/1M
+        expected_cost = (100 / 1_000_000) * 1.00 + (50 / 1_000_000) * 4.00
         assert callback.total_cost == pytest.approx(expected_cost)
 
 
@@ -322,7 +322,7 @@ class TestCombinedCallback:
         return LLMResult(
             generations=[[ChatGeneration(message=AIMessage(content="Hello!"))]],
             llm_output={
-                "model": "sabia-3.1",
+                "model": "sabia-4",
                 "token_usage": {
                     "prompt_tokens": 100,
                     "completion_tokens": 50,

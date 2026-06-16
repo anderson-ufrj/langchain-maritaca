@@ -7,11 +7,11 @@
 ```python
 from langchain_maritaca import ChatMaritaca
 
-model = ChatMaritaca(model="sabia-3.1", temperature=0.3).with_smart_fallbacks()
+model = ChatMaritaca(model="sabia-4", temperature=0.3).with_smart_fallbacks()
 response = model.invoke("Explique o artigo 5 da Constituição brasileira.")
 ```
 
-The call above tries `sabia-3.1` first and falls through to `sabiazinho-4` then `sabiazinho-3.1` only on transient failures (`429`, `502`, `503`, `504`, or timeouts). Authentication errors, bad requests, and other 4xx statuses propagate immediately so you notice configuration bugs.
+The call above tries `sabia-4` first and falls through to `sabiazinho-4` only on transient failures (`429`, `502`, `503`, `504`, or timeouts). Authentication errors, bad requests, and other 4xx statuses propagate immediately so you notice configuration bugs.
 
 ## Building from scratch
 
@@ -19,7 +19,7 @@ The call above tries `sabia-3.1` first and falls through to `sabiazinho-4` then 
 from langchain_maritaca import ChatMaritaca
 
 chain = ChatMaritaca.with_smart_fallbacks_from_primary(
-    primary="sabia-3.1",
+    primary="sabia-4",
     api_key="...",
     temperature=0.3,
 )
@@ -30,8 +30,8 @@ All keyword arguments are passed to the primary `ChatMaritaca` and inherited by 
 ## Customizing the chain
 
 ```python
-model = ChatMaritaca(model="sabia-3.1").with_smart_fallbacks(
-    fallbacks=["sabiazinho-3.1"],
+model = ChatMaritaca(model="sabia-4").with_smart_fallbacks(
+    fallbacks=["sabiazinho-4"],
 )
 ```
 
@@ -40,7 +40,7 @@ You can also override the exception filter if you need broader retry behavior:
 ```python
 import httpx
 
-model = ChatMaritaca(model="sabia-3.1").with_smart_fallbacks(
+model = ChatMaritaca(model="sabia-4").with_smart_fallbacks(
     exceptions_to_handle=(httpx.TimeoutException, httpx.HTTPStatusError),
 )
 ```
@@ -49,9 +49,8 @@ model = ChatMaritaca(model="sabia-3.1").with_smart_fallbacks(
 
 | Primary | Fallback order |
 |---|---|
-| `sabia-3.1` | `sabiazinho-4` → `sabiazinho-3.1` |
-| `sabiazinho-4` | `sabia-3.1` → `sabiazinho-3.1` |
-| `sabiazinho-3.1` | `sabia-3.1` → `sabiazinho-4` |
+| `sabia-4` | `sabiazinho-4` |
+| `sabiazinho-4` | `sabia-4` |
 
 Unknown primary models (for example, future Sabiá variants not yet known to the package) require an explicit `fallbacks=[...]` list, otherwise the helper raises a `ValueError` at construction time.
 

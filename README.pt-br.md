@@ -4,8 +4,8 @@
 [![Python](https://img.shields.io/pypi/pyversions/langchain-maritaca.svg)](https://pypi.org/project/langchain-maritaca/)
 [![Downloads](https://img.shields.io/pypi/dm/langchain-maritaca.svg)](https://pypi.org/project/langchain-maritaca/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/anderson-ufrj/langchain-maritaca/actions/workflows/ci.yml/badge.svg)](https://github.com/anderson-ufrj/langchain-maritaca/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/anderson-ufrj/langchain-maritaca/graph/badge.svg)](https://codecov.io/gh/anderson-ufrj/langchain-maritaca)
+[![CI](https://github.com/anderson-ntlabs/langchain-maritaca/actions/workflows/ci.yml/badge.svg)](https://github.com/anderson-ntlabs/langchain-maritaca/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/anderson-ntlabs/langchain-maritaca/graph/badge.svg)](https://codecov.io/gh/anderson-ntlabs/langchain-maritaca)
 
 [🇺🇸 Read in English](README.md)
 
@@ -13,7 +13,7 @@ Pacote de integração conectando [Maritaca AI](https://www.maritaca.ai/) e [Lan
 
 **Autor:** Anderson Henrique da Silva
 **Localização:** Minas Gerais, Brasil
-**GitHub:** [anderson-ufrj](https://github.com/anderson-ufrj)
+**GitHub:** [anderson-ntlabs](https://github.com/anderson-ntlabs)
 
 ## Visão Geral
 
@@ -23,9 +23,8 @@ A Maritaca AI oferece modelos de linguagem de última geração para Português 
 
 | Modelo | Contexto | Input (R$/1M) | Output (R$/1M) | Vision |
 |--------|----------|---------------|----------------|--------|
-| `sabia-3.1` | 128k | R$5,00 | R$10,00 | Sim |
+| `sabia-4` | 128k | R$5,00 | R$20,00 | Sim |
 | `sabiazinho-4` | 128k | R$1,00 | R$4,00 | Sim |
-| `sabiazinho-3.1` | 32k | R$1,00 | R$3,00 | Sim |
 
 > **Nota:** Todos os modelos suportam entradas multimodais (imagens).
 
@@ -59,7 +58,7 @@ model = ChatMaritaca(api_key="sua-chave-api")
 from langchain_maritaca import ChatMaritaca
 
 model = ChatMaritaca(
-    model="sabia-3.1",
+    model="sabia-4",
     temperature=0.7,
 )
 
@@ -77,7 +76,7 @@ print(response.content)
 ```python
 from langchain_maritaca import ChatMaritaca
 
-model = ChatMaritaca(model="sabia-3.1", streaming=True)
+model = ChatMaritaca(model="sabia-4", streaming=True)
 
 for chunk in model.stream("Conte uma história sobre o folclore brasileiro"):
     print(chunk.content, end="", flush=True)
@@ -90,7 +89,7 @@ import asyncio
 from langchain_maritaca import ChatMaritaca
 
 async def main():
-    model = ChatMaritaca(model="sabia-3.1")
+    model = ChatMaritaca(model="sabia-4")
     response = await model.ainvoke("Qual é a receita de pão de queijo?")
     print(response.content)
 
@@ -103,7 +102,7 @@ asyncio.run(main())
 from langchain_maritaca import ChatMaritaca
 from langchain_core.prompts import ChatPromptTemplate
 
-model = ChatMaritaca(model="sabia-3.1")
+model = ChatMaritaca(model="sabia-4")
 
 prompt = ChatPromptTemplate.from_messages([
     ("system", "Você é um especialista em {topic}."),
@@ -130,7 +129,7 @@ def get_weather(city: str) -> str:
     """Obtém o clima atual para uma cidade."""
     return f"O clima em {city} está ensolarado, 25°C"
 
-model = ChatMaritaca(model="sabia-3.1")
+model = ChatMaritaca(model="sabia-4")
 model_with_tools = model.bind_tools([get_weather])
 
 response = model_with_tools.invoke("Como está o tempo em São Paulo?")
@@ -187,7 +186,7 @@ class Pessoa(BaseModel):
     nome: str = Field(description="Nome da pessoa")
     idade: int = Field(description="Idade da pessoa")
 
-model = ChatMaritaca(model="sabia-3.1")
+model = ChatMaritaca(model="sabia-4")
 structured_model = model.with_structured_output(Pessoa)
 
 result = structured_model.invoke("João tem 25 anos e mora em São Paulo")
@@ -207,7 +206,7 @@ vectors = embeddings.embed_documents([
 ])
 
 # Chat para geração de respostas
-chat = ChatMaritaca(model="sabia-3.1")
+chat = ChatMaritaca(model="sabia-4")
 ```
 
 ### Com Cache
@@ -220,7 +219,7 @@ from langchain_maritaca import ChatMaritaca
 # Habilitar cache globalmente
 set_llm_cache(InMemoryCache())
 
-model = ChatMaritaca(model="sabia-3.1")
+model = ChatMaritaca(model="sabia-4")
 
 # Primeira chamada - acessa a API
 response1 = model.invoke("Qual é a capital do Brasil?")
@@ -238,7 +237,7 @@ Falhas transientes (`429`, `502`, `503`, `504`, timeouts) são roteadas para uma
 ```python
 from langchain_maritaca import ChatMaritaca
 
-modelo = ChatMaritaca(model="sabia-3.1", temperature=0.3).with_smart_fallbacks()
+modelo = ChatMaritaca(model="sabia-4", temperature=0.3).with_smart_fallbacks()
 resposta = modelo.invoke("Explique o artigo 5 da Constituição brasileira.")
 ```
 
@@ -272,7 +271,7 @@ print(f"P95: {latency_cb.p95_latency:.2f}s")
 from langchain_maritaca import ChatMaritaca
 from langchain_core.messages import HumanMessage
 
-model = ChatMaritaca(model="sabia-3.1")
+model = ChatMaritaca(model="sabia-4")
 
 # Contar tokens no texto
 tokens = model.get_num_tokens("Olá, como você está?")
@@ -299,10 +298,10 @@ Os modelos da Maritaca AI são especificamente treinados para Português Brasile
 
 **[Cidadão.AI](https://cidadao-ai-frontend.vercel.app/pt)** - Plataforma brasileira de transparência governamental alimentada por agentes de IA, processando mais de 331K requisições/mês.
 
-- Frontend: [github.com/anderson-ufrj/cidadao.ai-frontend](https://github.com/anderson-ufrj/cidadao.ai-frontend)
-- Backend: [github.com/anderson-ufrj/cidadao.ai-backend](https://github.com/anderson-ufrj/cidadao.ai-backend)
+- Frontend: [github.com/anderson-ntlabs/cidadao.ai-frontend](https://github.com/anderson-ntlabs/cidadao.ai-frontend)
+- Backend: [github.com/anderson-ntlabs/cidadao.ai-backend](https://github.com/anderson-ntlabs/cidadao.ai-backend)
 
-> *Usando este pacote em produção? [Abra uma issue](https://github.com/anderson-ufrj/langchain-maritaca/issues) para ser destacado!*
+> *Usando este pacote em produção? [Abra uma issue](https://github.com/anderson-ntlabs/langchain-maritaca/issues) para ser destacado!*
 
 ## Referência da API
 
@@ -314,7 +313,7 @@ Classe principal para interagir com os modelos da Maritaca AI.
 
 | Parâmetro | Tipo | Padrão | Descrição |
 |-----------|------|--------|-----------|
-| `model` | str | `"sabia-3.1"` | Nome do modelo a usar |
+| `model` | str | `"sabia-4"` | Nome do modelo a usar |
 | `temperature` | float | `0.7` | Temperatura de amostragem (0.0-2.0) |
 | `max_tokens` | int | None | Máximo de tokens a gerar |
 | `top_p` | float | `0.9` | Parâmetro top-p de amostragem |
@@ -346,7 +345,7 @@ Classe para gerar embeddings usando DeepInfra (recomendado pela Maritaca AI).
 
 ```bash
 # Clone o repositório
-git clone https://github.com/anderson-ufrj/langchain-maritaca.git
+git clone https://github.com/anderson-ntlabs/langchain-maritaca.git
 cd langchain-maritaca
 
 # Instale as dependências

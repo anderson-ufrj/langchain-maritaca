@@ -2,7 +2,7 @@
 
 Author: Anderson Henrique da Silva
 Location: Minas Gerais, Brasil
-GitHub: https://github.com/anderson-ufrj
+GitHub: https://github.com/anderson-ntlabs
 """
 
 from unittest.mock import patch
@@ -199,13 +199,13 @@ class TestEstimateCost:
 
     @pytest.fixture
     def model_sabia(self) -> ChatMaritaca:
-        """Create a ChatMaritaca instance with sabia-3.1."""
-        return ChatMaritaca(api_key="test-key", model="sabia-3.1")
+        """Create a ChatMaritaca instance with sabia-4."""
+        return ChatMaritaca(api_key="test-key", model="sabia-4")
 
     @pytest.fixture
     def model_sabiazinho(self) -> ChatMaritaca:
-        """Create a ChatMaritaca instance with sabiazinho-3.1."""
-        return ChatMaritaca(api_key="test-key", model="sabiazinho-3.1")
+        """Create a ChatMaritaca instance with sabiazinho-4."""
+        return ChatMaritaca(api_key="test-key", model="sabiazinho-4")
 
     def test_estimate_cost_returns_dict(self, model_sabia: ChatMaritaca) -> None:
         """Test that estimate_cost returns expected dictionary structure."""
@@ -221,30 +221,30 @@ class TestEstimateCost:
         assert "model" in estimate
 
     def test_estimate_cost_sabia_pricing(self, model_sabia: ChatMaritaca) -> None:
-        """Test cost estimation with sabia-3.1 pricing."""
+        """Test cost estimation with sabia-4 pricing."""
         messages = [HumanMessage(content="Hello!")]
         estimate = model_sabia.estimate_cost(messages, max_output_tokens=100)
 
-        assert estimate["model"] == "sabia-3.1"
+        assert estimate["model"] == "sabia-4"
         assert estimate["output_tokens"] == 100
 
         # Verify pricing calculation
-        # sabia-3.1: input $0.50/1M, output $1.50/1M
-        expected_output_cost = (100 / 1_000_000) * 1.50
+        # sabia-4: input R$5.00/1M, output R$20.00/1M (BRL)
+        expected_output_cost = (100 / 1_000_000) * 20.00
         assert estimate["output_cost"] == pytest.approx(expected_output_cost)
 
     def test_estimate_cost_sabiazinho_pricing(
         self, model_sabiazinho: ChatMaritaca
     ) -> None:
-        """Test cost estimation with sabiazinho-3.1 pricing."""
+        """Test cost estimation with sabiazinho-4 pricing."""
         messages = [HumanMessage(content="Hello!")]
         estimate = model_sabiazinho.estimate_cost(messages, max_output_tokens=100)
 
-        assert estimate["model"] == "sabiazinho-3.1"
+        assert estimate["model"] == "sabiazinho-4"
 
         # Verify pricing calculation
-        # sabiazinho-3.1: input $0.10/1M, output $0.30/1M
-        expected_output_cost = (100 / 1_000_000) * 0.30
+        # sabiazinho-4: input R$1.00/1M, output R$4.00/1M (BRL)
+        expected_output_cost = (100 / 1_000_000) * 4.00
         assert estimate["output_cost"] == pytest.approx(expected_output_cost)
 
     def test_estimate_cost_sabiazinho_cheaper(
@@ -287,13 +287,13 @@ class TestEstimateCost:
         assert estimate["total_cost"] == pytest.approx(expected_total)
 
     def test_estimate_cost_unknown_model_uses_default(self) -> None:
-        """Test that unknown models use default pricing."""
+        """Test that unknown models use default pricing (falls back to sabia-4)."""
         model = ChatMaritaca(api_key="test-key", model="unknown-model")
         messages = [HumanMessage(content="Hello!")]
         estimate = model.estimate_cost(messages, max_output_tokens=100)
 
-        # Should use default pricing (same as sabia-3.1)
-        expected_output_cost = (100 / 1_000_000) * 1.50
+        # Should use sabia-4 pricing as fallback: output R$20.00/1M (BRL)
+        expected_output_cost = (100 / 1_000_000) * 20.00
         assert estimate["output_cost"] == pytest.approx(expected_output_cost)
 
     def test_estimate_cost_complex_messages(self, model_sabia: ChatMaritaca) -> None:

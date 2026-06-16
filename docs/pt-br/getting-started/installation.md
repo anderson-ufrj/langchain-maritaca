@@ -26,7 +26,7 @@ pip install langchain-maritaca langchain langchain-community
 Para desenvolvimento ou para obter as últimas funcionalidades:
 
 ```bash
-git clone https://github.com/anderson-ufrj/langchain-maritaca.git
+git clone https://github.com/anderson-ntlabs/langchain-maritaca.git
 cd langchain-maritaca
 pip install -e .
 ```

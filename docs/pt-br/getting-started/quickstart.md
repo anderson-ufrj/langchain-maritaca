@@ -34,7 +34,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 # Inicializa o modelo
 modelo = ChatMaritaca(
-    model="sabia-3.1",      # Modelo mais capaz
+    model="sabia-4",         # Modelo mais capaz
     temperature=0.7,         # Nível de criatividade (0.0-2.0)
 )
 
@@ -87,7 +87,7 @@ print(f"Total de tokens: {resposta.usage_metadata['total_tokens']}")
 from langchain_maritaca import ChatMaritaca
 
 # Inicializa
-modelo = ChatMaritaca(model="sabia-3.1")
+modelo = ChatMaritaca(model="sabia-4")
 
 # Conversa simples
 conversa = [

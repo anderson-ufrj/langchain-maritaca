@@ -65,7 +65,7 @@ Cache keys are generated based on:
 
 1. **The prompt/messages**: Exact text of the input
 2. **Model parameters**: temperature, max_tokens, top_p, etc.
-3. **Model name**: sabia-3.1, sabiazinho-3.1, etc.
+3. **Model name**: sabia-4, sabiazinho-4, etc.
 
 This means:
 

@@ -15,8 +15,8 @@ modelos = ChatMaritaca.list_available_models()
 for nome, spec in modelos.items():
     print(f"{nome}:")
     print(f"  Contexto: {spec['context_limit']:,} tokens")
-    print(f"  Custo entrada: ${spec['input_cost_per_1m']}/1M tokens")
-    print(f"  Custo saída: ${spec['output_cost_per_1m']}/1M tokens")
+    print(f"  Custo entrada: R${spec['input_cost_per_1m']}/1M tokens")
+    print(f"  Custo saída: R${spec['output_cost_per_1m']}/1M tokens")
     print(f"  Velocidade: {spec['speed']}")
     print(f"  Complexidade: {spec['complexity']}")
 ```
@@ -25,24 +25,24 @@ for nome, spec in modelos.items():
 
 | Modelo | Contexto | Velocidade | Complexidade | Custo (Entrada/Saída por 1M) |
 |--------|----------|------------|--------------|------------------------------|
-| sabia-3.1 | 32.768 | Média | Alta | $0,50 / $1,50 |
-| sabiazinho-3.1 | 8.192 | Rápida | Média | $0,10 / $0,30 |
+| sabia-4 | 128.000 | Média | Alta | R$5,00 / R$20,00 |
+| sabiazinho-4 | 128.000 | Rápida | Média | R$1,00 / R$4,00 |
 
-### Quando Usar sabia-3.1
+### Quando Usar sabia-4
 
 - Tarefas de raciocínio complexo
 - Análise de documentos longos
 - Resolução de problemas em múltiplas etapas
 - Quando qualidade de saída é crítica
-- Conversas longas que precisam de contexto de 32K
+- Conversas longas com até 128K de contexto
 
-### Quando Usar sabiazinho-3.1
+### Quando Usar sabiazinho-4
 
 - Perguntas e respostas simples
 - Quando respostas rápidas são necessárias
 - Aplicações sensíveis a custo
 - Tarefas simples de alto volume
-- Conversas com menos de 8K tokens
+- Quando velocidade importa mais do que profundidade
 
 ## Recomendação Automática de Modelo
 
@@ -82,8 +82,8 @@ rec = ChatMaritaca.recommend_model(
     input_length=10000,  # 10K tokens necessários
 )
 
-# Vai recomendar sabia-3.1 devido aos requisitos de contexto
-print(rec['model'])  # 'sabia-3.1'
+# Ambos os modelos suportam 128K de contexto; recomendação baseada em complexidade/prioridade
+print(rec['model'])  # 'sabiazinho-4'
 ```
 
 ## Exemplos Práticos
@@ -97,7 +97,7 @@ rec = ChatMaritaca.recommend_model(
     priority="cost",
 )
 
-model = ChatMaritaca(model=rec['model'])  # sabiazinho-3.1
+model = ChatMaritaca(model=rec['model'])  # sabiazinho-4
 ```
 
 ### Otimização de Qualidade
@@ -109,7 +109,7 @@ rec = ChatMaritaca.recommend_model(
     priority="quality",
 )
 
-model = ChatMaritaca(model=rec['model'])  # sabia-3.1
+model = ChatMaritaca(model=rec['model'])  # sabia-4
 ```
 
 ### Otimização de Velocidade
@@ -121,7 +121,7 @@ rec = ChatMaritaca.recommend_model(
     priority="speed",
 )
 
-model = ChatMaritaca(model=rec['model'])  # sabiazinho-3.1
+model = ChatMaritaca(model=rec['model'])  # sabiazinho-4
 ```
 
 ### Seleção Dinâmica

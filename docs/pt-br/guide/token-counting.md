@@ -47,7 +47,7 @@ Estime o custo de uma requisição antes de fazê-la:
 ```python
 from langchain_core.messages import HumanMessage
 
-model = ChatMaritaca(model="sabia-3.1")
+model = ChatMaritaca(model="sabia-4")
 
 messages = [
     HumanMessage(content="Me conte uma longa história sobre o Brasil")
@@ -58,9 +58,9 @@ estimate = model.estimate_cost(messages, max_output_tokens=2000)
 
 print(f"Tokens de entrada: {estimate['input_tokens']}")
 print(f"Tokens de saída: {estimate['output_tokens']}")
-print(f"Custo de entrada: ${estimate['input_cost']:.6f}")
-print(f"Custo de saída: ${estimate['output_cost']:.6f}")
-print(f"Custo total: ${estimate['total_cost']:.6f}")
+print(f"Custo de entrada: R${estimate['input_cost']:.6f}")
+print(f"Custo de saída: R${estimate['output_cost']:.6f}")
+print(f"Custo total: R${estimate['total_cost']:.6f}")
 ```
 
 ### Comparar Custos de Modelos
@@ -73,25 +73,25 @@ from langchain_core.messages import HumanMessage
 messages = [HumanMessage(content="Me conte sobre a história do Brasil")]
 
 # Comparar sabia vs sabiazinho
-sabia = ChatMaritaca(model="sabia-3.1")
-sabiazinho = ChatMaritaca(model="sabiazinho-3.1")
+sabia = ChatMaritaca(model="sabia-4")
+sabiazinho = ChatMaritaca(model="sabiazinho-4")
 
 sabia_cost = sabia.estimate_cost(messages, max_output_tokens=1000)
 sabiazinho_cost = sabiazinho.estimate_cost(messages, max_output_tokens=1000)
 
-print(f"Custo sabia-3.1: ${sabia_cost['total_cost']:.6f}")
-print(f"Custo sabiazinho-3.1: ${sabiazinho_cost['total_cost']:.6f}")
+print(f"Custo sabia-4: R${sabia_cost['total_cost']:.6f}")
+print(f"Custo sabiazinho-4: R${sabiazinho_cost['total_cost']:.6f}")
 print(f"Economia com sabiazinho: {(1 - sabiazinho_cost['total_cost']/sabia_cost['total_cost'])*100:.1f}%")
 ```
 
 ## Referência de Preços
 
-Preços estimados atuais para modelos Maritaca AI:
+Preços atuais para modelos Maritaca AI (BRL):
 
 | Modelo | Entrada (por 1M tokens) | Saída (por 1M tokens) |
 |--------|-------------------------|----------------------|
-| sabia-3.1 | $0.50 | $1.50 |
-| sabiazinho-3.1 | $0.10 | $0.30 |
+| sabia-4 | R$5,00 | R$20,00 |
+| sabiazinho-4 | R$1,00 | R$4,00 |
 
 > **Nota**: Os preços são estimativas e podem mudar. Consulte [Maritaca AI](https://www.maritaca.ai/) para preços atualizados.
 
@@ -159,15 +159,15 @@ Roteie para diferentes modelos baseado em custo:
 ```python
 def get_model_for_task(messages, complexity="simple"):
     """Escolha modelo baseado na complexidade e custo."""
-    sabia = ChatMaritaca(model="sabia-3.1")
-    sabiazinho = ChatMaritaca(model="sabiazinho-3.1")
+    sabia = ChatMaritaca(model="sabia-4")
+    sabiazinho = ChatMaritaca(model="sabiazinho-4")
 
     if complexity == "complex":
         return sabia
 
     # Para tarefas simples, use o modelo mais barato
     estimate = sabiazinho.estimate_cost(messages)
-    if estimate["total_cost"] < 0.001:  # Menos de $0.001
+    if estimate["total_cost"] < 0.001:  # Menos de R$0.001
         return sabiazinho
 
     return sabia
@@ -176,7 +176,7 @@ def get_model_for_task(messages, complexity="simple"):
 ## Boas Práticas
 
 1. **Estime antes de operações longas**: Para processamento em lote, estime o custo total antes de começar
-2. **Use sabiazinho para tarefas simples**: É 5x mais barato para entrada e saída
+2. **Use sabiazinho-4 para tarefas simples**: É 5x mais barato para entrada e saída
 3. **Monitore real vs estimado**: Use `CostTrackingCallback` para verificar estimativas
 4. **Instale tiktoken**: Para contagem mais precisa, especialmente com texto em português
 5. **Cache consultas repetidas**: Use cache do LangChain para evitar chamadas redundantes

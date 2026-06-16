@@ -12,7 +12,7 @@ from langchain_maritaca import ChatMaritaca
 
 ```python
 model = ChatMaritaca(
-    model="sabia-3.1",
+    model="sabia-4",
     temperature=0.7,
     max_tokens=None,
     api_key=None,  # Uses MARITACA_API_KEY from environment
@@ -25,7 +25,7 @@ model = ChatMaritaca(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `model` | `str` | `"sabia-3.1"` | Model name to use |
+| `model` | `str` | `"sabia-4"` | Model name to use |
 | `temperature` | `float` | `0.7` | Controls randomness (0.0-2.0) |
 | `max_tokens` | `int \| None` | `None` | Maximum tokens in response |
 | `top_p` | `float` | `0.9` | Nucleus sampling |
@@ -234,7 +234,7 @@ AIMessage(
         "total_tokens": 30,
     },
     response_metadata={
-        "model": "sabia-3.1",
+        "model": "sabia-4",
         "finish_reason": "stop",
     },
 )

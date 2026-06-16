@@ -22,7 +22,7 @@ def mock_chat_result() -> ChatResult:
                 generation_info={"finish_reason": "stop"},
             )
         ],
-        llm_output={"model": "sabia-3.1"},
+        llm_output={"model": "sabia-4"},
     )
 
 
@@ -202,7 +202,7 @@ class TestBatchWithProgress:
                         generation_info={"finish_reason": "stop"},
                     )
                 ],
-                llm_output={"model": "sabia-3.1"},
+                llm_output={"model": "sabia-4"},
             )
 
         with patch.object(model, "_agenerate", side_effect=ordered_response):
@@ -226,7 +226,7 @@ class TestAbatchEstimateCost:
     @pytest.mark.asyncio
     async def test_abatch_estimate_cost_basic(self) -> None:
         """Test basic batch cost estimation."""
-        model = ChatMaritaca(api_key="test", model="sabia-3.1")
+        model = ChatMaritaca(api_key="test", model="sabia-4")
 
         inputs = [
             [HumanMessage(content="Short question")],
@@ -245,20 +245,20 @@ class TestAbatchEstimateCost:
 
         assert estimate["total_requests"] == 2
         assert estimate["total_output_tokens"] == 200  # 100 * 2
-        assert estimate["model"] == "sabia-3.1"
+        assert estimate["model"] == "sabia-4"
 
     @pytest.mark.asyncio
     async def test_abatch_estimate_cost_different_models(self) -> None:
         """Test cost estimation for different models."""
-        model_sabia = ChatMaritaca(api_key="test", model="sabia-3.1")
-        model_sabiazinho = ChatMaritaca(api_key="test", model="sabiazinho-3.1")
+        model_sabia = ChatMaritaca(api_key="test", model="sabia-4")
+        model_sabiazinho = ChatMaritaca(api_key="test", model="sabiazinho-4")
 
         inputs = [[HumanMessage(content="Test question")]]
 
         estimate_sabia = await model_sabia.abatch_estimate_cost(inputs)
         estimate_sabiazinho = await model_sabiazinho.abatch_estimate_cost(inputs)
 
-        # sabiazinho should be cheaper
+        # sabiazinho-4 should be cheaper than sabia-4
         assert estimate_sabiazinho["total_cost"] < estimate_sabia["total_cost"]
 
     @pytest.mark.asyncio

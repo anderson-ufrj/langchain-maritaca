@@ -69,6 +69,11 @@ venv.bak/
 # Claude Code
 CLAUDE.md
 
+# Internal planning (specs, plans, and session handoffs are local-only)
+docs/planning/specs/
+docs/planning/plans/
+docs/planning/handoffs/
+
 # mypy
 .mypy_cache/
 .dmypy.json
@@ -123,3 +128,6 @@ Pipfile.lock
 # Benchmarks
 .benchmarks/
 uv.lock
+
+# Workspace management metadata (local, not part of the package)
+.metadata.yaml

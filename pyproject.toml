@@ -35,7 +35,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-version = "0.5.0"
+version = "0.6.0"
 requires-python = ">=3.10,<4.0"
 dependencies = [
     "langchain-core>=0.3.0,<2.0.0",
@@ -44,11 +44,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/anderson-ufrj/langchain-maritaca"
-Documentation = "https://github.com/anderson-ufrj/langchain-maritaca#readme"
-Repository = "https://github.com/anderson-ufrj/langchain-maritaca"
-Issues = "https://github.com/anderson-ufrj/langchain-maritaca/issues"
-Changelog = "https://github.com/anderson-ufrj/langchain-maritaca/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/anderson-ntlabs/langchain-maritaca"
+Documentation = "https://github.com/anderson-ntlabs/langchain-maritaca#readme"
+Repository = "https://github.com/anderson-ntlabs/langchain-maritaca"
+Issues = "https://github.com/anderson-ntlabs/langchain-maritaca/issues"
+Changelog = "https://github.com/anderson-ntlabs/langchain-maritaca/blob/main/CHANGELOG.md"
 "Maritaca AI" = "https://www.maritaca.ai/"
 
 [project.optional-dependencies]

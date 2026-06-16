@@ -4,7 +4,7 @@ Maritaca AI provides Brazilian Portuguese-optimized language models.
 
 Author: Anderson Henrique da Silva
 Location: Minas Gerais, Brasil
-GitHub: https://github.com/anderson-ufrj
+GitHub: https://github.com/anderson-ntlabs
 """
 
 from langchain_maritaca.cache import MaritacaSemanticCache

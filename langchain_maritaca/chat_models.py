@@ -5,7 +5,7 @@ including the Sabiá family of models.
 
 Author: Anderson Henrique da Silva
 Location: Minas Gerais, Brasil
-GitHub: https://github.com/anderson-ufrj
+GitHub: https://github.com/anderson-ntlabs
 """
 
 from __future__ import annotations
@@ -54,6 +54,7 @@ from langchain_core.utils.function_calling import convert_to_openai_tool
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 from typing_extensions import Self
 
+from langchain_maritaca import models as maritaca_models
 from langchain_maritaca.version import __version__
 
 # HTTP status code for rate limiting
@@ -62,57 +63,50 @@ HTTP_TOO_MANY_REQUESTS = 429
 # Logger for context window warnings
 logger = logging.getLogger(__name__)
 
-# Context window limits for Maritaca models (in tokens)
-MODEL_CONTEXT_LIMITS: dict[str, int] = {
-    "sabia-3.1": 128000,
-    "sabiazinho-3.1": 32000,
-    "sabiazinho-4": 128000,
-}
+# Default context window when a model is unknown to the SoT (safe upper bound
+# that covers every active Sabiá 4 model).
 DEFAULT_CONTEXT_LIMIT = 128000
 
 # Warning threshold (percentage of context used)
 CONTEXT_WARNING_THRESHOLD = 0.9  # Warn at 90% usage
 
-# Model specifications for selection helper
-MODEL_SPECS: dict[str, dict[str, Any]] = {
-    "sabia-3.1": {
-        "context_limit": 128000,
-        "input_cost_per_1m": 5.00,
-        "output_cost_per_1m": 10.00,
-        "complexity": "high",
-        "speed": "medium",
-        "capabilities": ["complex_reasoning", "long_context", "tool_calling", "vision"],
-        "description": "Most capable model, best for complex tasks",
-    },
-    "sabiazinho-3.1": {
-        "context_limit": 32000,
-        "input_cost_per_1m": 1.00,
-        "output_cost_per_1m": 3.00,
-        "complexity": "medium",
-        "speed": "fast",
-        "capabilities": ["simple_tasks", "quick_responses", "tool_calling", "vision"],
-        "description": "Fast and economical, great for simple tasks",
-    },
-    "sabiazinho-4": {
-        "context_limit": 128000,
-        "input_cost_per_1m": 1.00,
-        "output_cost_per_1m": 4.00,
-        "complexity": "medium",
-        "speed": "fast",
-        "capabilities": ["simple_tasks", "quick_responses", "tool_calling", "vision"],
-        "description": "Latest fast model with vision support and 128k context",
-    },
-}
+# All model metadata (names, context limits, pricing, capabilities, fallback
+# ordering) lives in ``langchain_maritaca.models`` — the single source of
+# truth. These module-level views are derived lazily so a SoT edit propagates
+# without touching this file.
 
-# Canonical fallback ordering across the Sabiá family. Used when callers do not
-# supply their own fallback list in with_smart_fallbacks(). Order reflects a
-# capability-then-recency heuristic, so fallbacks preserve quality first and
-# cost/latency second.
-_CANONICAL_FALLBACK_ORDER: tuple[str, ...] = (
-    "sabia-3.1",
-    "sabiazinho-4",
-    "sabiazinho-3.1",
-)
+
+def _model_context_limits() -> dict[str, int]:
+    """View of the SoT's context limits, refreshed on each call."""
+    return maritaca_models.context_limits()
+
+
+def _model_specs() -> dict[str, dict[str, Any]]:
+    """View of the SoT's specs in the legacy dict shape."""
+    return maritaca_models.as_legacy_specs()
+
+
+# Public aliases kept for backwards compatibility with users who imported
+# these names directly. New code should prefer ``langchain_maritaca.models``.
+MODEL_CONTEXT_LIMITS: dict[str, int] = _model_context_limits()
+MODEL_SPECS: dict[str, dict[str, Any]] = _model_specs()
+
+
+def _pricing_for_model(model_name: str) -> dict[str, float]:
+    """Return BRL-per-1M-tokens pricing for ``model_name``.
+
+    Falls back to the flagship primary's pricing when ``model_name`` is
+    unknown, so estimate helpers stay useful even when a caller picks a
+    model the SoT has not registered (custom/preview names).
+    """
+    try:
+        spec = maritaca_models.get_model(model_name)
+    except KeyError:
+        spec = maritaca_models.get_model(maritaca_models.default_primary())
+    return {
+        "input": spec.input_cost_per_1m_brl,
+        "output": spec.output_cost_per_1m_brl,
+    }
 
 
 def _default_fallback_chain(primary: str) -> list[str]:
@@ -122,9 +116,10 @@ def _default_fallback_chain(primary: str) -> list[str]:
     (and a DRY-safe config error at the ChatMaritaca level) instead of a
     silent no-op.
     """
-    if primary not in _CANONICAL_FALLBACK_ORDER:
+    canonical = maritaca_models.canonical_fallback_order()
+    if primary not in canonical:
         return []
-    return [m for m in _CANONICAL_FALLBACK_ORDER if m != primary]
+    return [m for m in canonical if m != primary]
 
 
 _TRANSIENT_STATUS_CODES: frozenset[int] = frozenset({429, 502, 503, 504})
@@ -168,8 +163,8 @@ class ChatMaritaca(BaseChatModel):
     Key init args - completion params:
         model:
             Name of Maritaca model to use. Available models:
-            - `sabia-3.1` (default): Most capable model
-            - `sabiazinho-3.1`: Faster and more economical
+            - `sabia-4` (default): Flagship, best quality, 128k context, vision
+            - `sabiazinho-4`: Fast and economical, 128k context, vision
         temperature:
             Sampling temperature. Ranges from 0.0 to 2.0.
         max_tokens:
@@ -189,7 +184,7 @@ class ChatMaritaca(BaseChatModel):
         from langchain_maritaca import ChatMaritaca
 
         model = ChatMaritaca(
-            model="sabia-3.1",
+            model="sabia-4",
             temperature=0.7,
             max_retries=2,
         )
@@ -206,7 +201,7 @@ class ChatMaritaca(BaseChatModel):
         ```python
         AIMessage(
             content="A capital do Brasil é Brasília.",
-            response_metadata={"model": "sabia-3.1", "finish_reason": "stop"},
+            response_metadata={"model": "sabia-4", "finish_reason": "stop"},
         )
         ```
 
@@ -228,12 +223,14 @@ class ChatMaritaca(BaseChatModel):
     async_client: Any = Field(default=None, exclude=True)
     """Async HTTP client."""
 
-    model_name: str = Field(default="sabia-3.1", alias="model")
+    model_name: str = Field(
+        default_factory=maritaca_models.default_primary, alias="model"
+    )
     """Model name to use.
 
     Available models:
-    - sabia-3.1: Most capable model, best for complex tasks
-    - sabiazinho-3.1: Fast and economical, great for simple tasks
+    - sabia-4: Flagship, best quality, 128k context, vision (default)
+    - sabiazinho-4: Fast and economical, 128k context, vision
     """
 
     temperature: float = 0.7
@@ -1062,7 +1059,7 @@ class ChatMaritaca(BaseChatModel):
         Example:
             .. code-block:: python
 
-                model = ChatMaritaca(model="sabia-3.1")
+                model = ChatMaritaca(model="sabia-4")
                 messages = [HumanMessage(content="Tell me a long story")]
 
                 estimate = model.estimate_cost(messages, max_output_tokens=2000)
@@ -1072,14 +1069,8 @@ class ChatMaritaca(BaseChatModel):
             Prices are estimates based on public pricing and may change.
             Check https://www.maritaca.ai/ for current pricing.
         """
-        # Maritaca AI pricing (USD per 1M tokens)
-        pricing = {
-            "sabia-3.1": {"input": 0.50, "output": 1.50},
-            "sabiazinho-3.1": {"input": 0.10, "output": 0.30},
-            "default": {"input": 0.50, "output": 1.50},
-        }
-
-        model_pricing = pricing.get(self.model_name, pricing["default"])
+        # Pricing is sourced from langchain_maritaca.models (SoT, BRL per 1M).
+        model_pricing = _pricing_for_model(self.model_name)
 
         input_tokens = self.get_num_tokens_from_messages(messages)
         output_tokens = max_output_tokens
@@ -1108,10 +1099,10 @@ class ChatMaritaca(BaseChatModel):
         Example:
             .. code-block:: python
 
-                model = ChatMaritaca(model="sabia-3.1")
+                model = ChatMaritaca(model="sabia-4")
                 print(f"Context limit: {model.get_context_limit()}")  # 32768
 
-                model = ChatMaritaca(model="sabiazinho-3.1")
+                model = ChatMaritaca(model="sabiazinho-4")
                 print(f"Context limit: {model.get_context_limit()}")  # 8192
         """
         if self.max_context_tokens is not None:
@@ -1395,8 +1386,8 @@ class ChatMaritaca(BaseChatModel):
             candidates.append((model_name, specs, score))
 
         if not candidates:
-            # No suitable model found, return the most capable one
-            default_model = "sabia-3.1"
+            # No suitable model found, fall back to the flagship primary.
+            default_model = maritaca_models.default_primary()
             return {
                 "model": default_model,
                 "reason": (
@@ -1624,13 +1615,8 @@ class ChatMaritaca(BaseChatModel):
 
         total_output_tokens = max_output_tokens * len(inputs)
 
-        # Get pricing
-        pricing = {
-            "sabia-3.1": {"input": 0.50, "output": 1.50},
-            "sabiazinho-3.1": {"input": 0.10, "output": 0.30},
-            "default": {"input": 0.50, "output": 1.50},
-        }
-        model_pricing = pricing.get(self.model_name, pricing["default"])
+        # Pricing is sourced from langchain_maritaca.models (SoT, BRL per 1M).
+        model_pricing = _pricing_for_model(self.model_name)
 
         input_cost = (total_input_tokens / 1_000_000) * model_pricing["input"]
         output_cost = (total_output_tokens / 1_000_000) * model_pricing["output"]
