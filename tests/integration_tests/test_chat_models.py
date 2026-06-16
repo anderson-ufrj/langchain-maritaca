@@ -4,7 +4,7 @@ These tests require a valid MARITACA_API_KEY environment variable.
 
 Author: Anderson Henrique da Silva
 Location: Minas Gerais, Brasil
-GitHub: https://github.com/anderson-ufrj
+GitHub: https://github.com/anderson-ntlabs
 """
 
 import os
