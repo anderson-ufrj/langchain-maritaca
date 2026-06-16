@@ -128,3 +128,6 @@ Pipfile.lock
 # Benchmarks
 .benchmarks/
 uv.lock
+
+# Workspace management metadata (local, not part of the package)
+.metadata.yaml
